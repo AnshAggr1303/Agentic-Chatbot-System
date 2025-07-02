@@ -64,6 +64,13 @@ A cutting-edge real-time agentic chatbot system that combines modern web technol
 
 ## 🏗️ Architecture
 
+### System Architecture Overview
+![System Architecture](assets/1)
+
+### Data Flow Diagram
+![Data Flow](assets/2)
+
+### Technical Flow
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Next.js Web   │───▶│   Supabase DB   │───▶│  Edge Function  │
@@ -73,7 +80,7 @@ A cutting-edge real-time agentic chatbot system that combines modern web technol
                                                        ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │  Audio Storage  │◀───│   TTS Service   │◀───│  Google Gemini  │
-│ (Supabase S3)   │    │                 │    │    LLM API      │
+│ (Supabase S3)   │    │                 │    │    LLM API     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -243,6 +250,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303) and [Yash Dagar](https://github.com/yashdagar)**
+**Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303)**
 
 ⭐ Star this repository if you found it helpful!
