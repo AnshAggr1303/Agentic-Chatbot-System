@@ -65,7 +65,7 @@ A cutting-edge real-time agentic chatbot system that combines modern web technol
 ## 🏗️ Architecture
 
 ### System Architecture Overview
-![System Architecture](assets/1)
+![System Architecture](assets/1.jpeg)
 
 ### Data Flow Diagram
 ![Data Flow](assets/2)
