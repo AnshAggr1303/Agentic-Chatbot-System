@@ -250,6 +250,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303)**
+**Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303) and  [Yash Dagar](https://github.com/yashdagar)**
 
 ⭐ Star this repository if you found it helpful!
