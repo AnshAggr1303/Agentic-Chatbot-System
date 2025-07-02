@@ -1,0 +1,28 @@
+{
+  "name": "agentic-chatbot-system",
+  "version": "1.0.0",
+  "description": "Voice-enabled chatbot system with multi-agent AI",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:ai\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server/api && npm run dev",
+    "dev:ai": "cd ai-services/langgraph && python main.py",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server/api && npm run build",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm test",
+    "test:server": "cd server/api && npm test",
+    "deploy": "./infrastructure/scripts/deploy.sh",
+    "setup:supabase": "cd server/supabase && supabase start",
+    "setup:env": "cp .env.example .env"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "workspaces": [
+    "client",
+    "server/api"
+  ]
+}

@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+*/node_modules/
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# AWS
+.aws/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Docker
+docker-compose.override.yml
+
+# Monitoring
+grafana/data/
+prometheus/data/
+
+# AI Models
+ai-services/*/models/*.bin
+ai-services/*/models/*.pkl
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+temp_audio/
