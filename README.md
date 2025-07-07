@@ -4,7 +4,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black.svg)
 ![AWS Lambda](https://img.shields.io/badge/AWS-Lambda-orange.svg)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)
-![Google Gemini](https://img.shields.io/badge/Google-Gemini-blue.svg)
+![LLM Gemini](https://img.shields.io/badge/Google-Gemini-blue.svg)
 
 ## 🚀 Overview
 
