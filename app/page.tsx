@@ -1,3 +1,5 @@
+"use client"
+
 // components/AudioChatPage.tsx
 import { useState, useEffect, useRef } from 'react';
 import { Mic, Volume2, VolumeX } from 'lucide-react';

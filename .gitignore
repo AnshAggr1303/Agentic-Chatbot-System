@@ -19,37 +19,15 @@ build/
 *.log
 logs/
 
+#Next
+.next/
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Supabase
-.supabase/
-
-# AWS
-.aws/
-
-# Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-
-# Docker
-docker-compose.override.yml
-
-# Monitoring
-grafana/data/
-prometheus/data/
-
-# AI Models
-ai-services/*/models/*.bin
-ai-services/*/models/*.pkl
 
 # Audio files
 *.wav

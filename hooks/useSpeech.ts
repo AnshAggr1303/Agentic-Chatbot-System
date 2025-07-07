@@ -1,3 +1,5 @@
+"use client"
+
 // hooks/useSpeech.ts
 import { useState, useEffect, useRef } from 'react';
 import { SpeechService, AudioMessage } from '../lib/services/speechService';
