@@ -1,28 +1,32 @@
 {
-  "name": "agentic-chatbot-system",
-  "version": "1.0.0",
-  "description": "Voice-enabled chatbot system with multi-agent AI",
-  "main": "index.js",
+  "name": "multilingual-chatbot",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:ai\"",
-    "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server/api && npm run dev",
-    "dev:ai": "cd ai-services/langgraph && python main.py",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "cd client && npm run build",
-    "build:server": "cd server/api && npm run build",
-    "test": "npm run test:client && npm run test:server",
-    "test:client": "cd client && npm test",
-    "test:server": "cd server/api && npm test",
-    "deploy": "./infrastructure/scripts/deploy.sh",
-    "setup:supabase": "cd server/supabase && supabase start",
-    "setup:env": "cp .env.example .env"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@splinetool/react-spline": "^4.0.0",
+    "@splinetool/runtime": "^1.10.19",
+    "@tailwindcss/postcss": "^4.1.10",
+    "lucide-react": "^0.522.0",
+    "next": "15.1.6",
+    "node-record-lpcm16": "^1.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "stream": "^0.0.3"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0"
-  },
-  "workspaces": [
-    "client",
-    "server/api"
-  ]
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/cli": "^4.1.10",
+    "@types/node": "24.0.3",
+    "@types/react": "19.1.8",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.10"
+  }
 }
