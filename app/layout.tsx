@@ -5,12 +5,14 @@ const poppins = Poppins({
   variable: "--font-poppins",
   weight: ["300", "500", "700"],
   display: 'swap',
+  subsets: ["latin"],
 });
 
 const headlandOne = Headland_One({
   variable: "--font-playfair",
   weight: ["400"],
   display: 'swap',
+  subsets: ["latin"],
 });
 
 export const metadata = {
