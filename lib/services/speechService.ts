@@ -15,7 +15,7 @@ export interface SpeechResponse {
 
 export class SpeechService {
   private static instance: SpeechService;
-  
+
   public static getInstance(): SpeechService {
     if (!SpeechService.instance) {
       SpeechService.instance = new SpeechService();
@@ -23,11 +23,14 @@ export class SpeechService {
     return SpeechService.instance;
   }
 
-  async processAudio(audioBlob: Blob, transcript: string): Promise<SpeechResponse> {
+  async processAudio(audioBlob: Blob, transcript: string, chatId?: string, messageId?: string): Promise<SpeechResponse> {
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.wav');
       formData.append('transcript', transcript);
+      
+      if (chatId) formData.append('chat_id', chatId);
+      if (messageId) formData.append('message_id', messageId);
 
       const response = await fetch('/api/speech', {
         method: 'POST',
@@ -39,7 +42,7 @@ export class SpeechService {
       }
 
       const data = await response.json();
-      
+
       if (data.success) {
         const aiMessage: AudioMessage = {
           id: Date.now(),
@@ -48,16 +51,15 @@ export class SpeechService {
           audioUrl: data.audioUrl,
           timestamp: new Date()
         };
-        
         return { success: true, message: aiMessage };
       } else {
         return { success: false, error: data.error };
       }
     } catch (error) {
       console.error('Speech service error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -71,7 +73,7 @@ export class SpeechService {
       });
 
       if (!response.ok) throw new Error('TTS generation failed');
-      
+
       const data = await response.json();
       return data.audioUrl;
     } catch (error) {
