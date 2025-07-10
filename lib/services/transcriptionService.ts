@@ -35,7 +35,7 @@ export class TranscriptionService {
     }
   }
 
-  private handleResult(event: SpeechRecognitionEvent) {
+  private handleResult(event) {
     let finalTranscript = '';
     let interimTranscript = '';
     
@@ -67,7 +67,7 @@ export class TranscriptionService {
     this.callbacks.onEnd?.();
   }
 
-  private handleError(event: SpeechRecognitionErrorEvent) {
+  private handleError(event) {
     this.isActive = false;
     if (event.error !== 'aborted' && event.error !== 'no-speech') {
       this.callbacks.onError?.(`Speech recognition error: ${event.error}`);

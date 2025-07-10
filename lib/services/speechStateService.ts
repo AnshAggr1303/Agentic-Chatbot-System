@@ -1,3 +1,5 @@
+import { SpeechState } from "../../types/audio";
+
 // lib/services/speechStateService.ts
 export class SpeechStateService {
   private completedTranscript = '';

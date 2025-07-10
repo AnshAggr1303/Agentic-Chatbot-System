@@ -3,6 +3,7 @@ import { TranscriptionService } from './transcriptionService';
 import { AudioRecordingService } from './audioRecordingService';
 import { SpeechStateService } from './speechStateService';
 import { VADIntegrationService } from './vadIntegrationService';
+import { VADResult } from '../../types/audio';
 
 export class SpeechOrchestrationService {
   private transcriptionService: TranscriptionService;
