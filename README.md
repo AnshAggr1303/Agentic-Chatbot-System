@@ -239,7 +239,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/AnshAggr1303/Agentic-Chatbot-System/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AnshAggr1303/Agentic-Chatbot-System/discussions)
-- **Email**: anshaggr1303@gmail.com
+- **Email**: anshagrawal148@gmail.com
 
 ## 🎉 Acknowledgments
 
