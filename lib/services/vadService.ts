@@ -146,8 +146,20 @@ class VoiceActivityDetector {
     const spectralScore = spectralCentroid > this.config.spectralCentroidThreshold ? 1.0 : 0.5;
     const zcrScore = zcr < this.config.zcr_threshold ? 1.0 : 0.5;
     
-    return (energyScore * 0.6 + spectralScore * 0.2 + zcrScore * 0.2);
+    const rawScore = (energyScore * 0.6 + spectralScore * 0.2 + zcrScore * 0.2);
+    return (rawScore - 0.3) / 0.7;
   }
+
+  // before
+  // private calculateConfidence(energy: number, spectralCentroid: number, zcr: number): number {
+  //   const energyScore = Math.min(energy / this.config.energyThreshold, 1.0);
+  //   const spectralScore = spectralCentroid > this.config.spectralCentroidThreshold ? 1.0 : 0.5;
+  //   const zcrScore = zcr < this.config.zcr_threshold ? 1.0 : 0.5;
+
+  //   console.log(`Scores:\nenergy: ${energy * 0.6}\npectralScore: ${spectralScore * 0.2}\nzcrScore: ${zcrScore * 0.2}`);
+    
+  //   return (energyScore * 0.6 + spectralScore * 0.2 + zcrScore * 0.2);
+  // }
 
   startDetection(callback: (result: { isSpeech: boolean; confidence: number; energy: number; sentenceComplete: boolean }) => void): void {
     this.callback = callback;
