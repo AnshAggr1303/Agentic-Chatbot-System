@@ -49,10 +49,6 @@ export class SupabaseService {
   }
 
   /**
-   * Test database connection
-   */
-
-  /**
    * Check if connected to database
    */
   isConnectedToDatabase(): boolean {

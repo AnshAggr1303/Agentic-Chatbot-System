@@ -79,16 +79,6 @@ export default function AudioChatPage() {
     setCurrentPlaying(null);
   };
 
-  const downloadAudio = (filename: string) => {
-    const url = `/api/files/stream?chat_id=${currentChatId}&message_id=${currentMessageId}&filename=${filename}`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
   return (
     <div className="relative min-h-screen bg-background text-gray-100 overflow-hidden">
       <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-4">
