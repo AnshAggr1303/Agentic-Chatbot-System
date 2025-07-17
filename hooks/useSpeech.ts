@@ -28,10 +28,10 @@ export interface UseSpeechReturn {
   getChatMessages: (chatId: string) => Promise<any>;
   isConnectedToSupabase: boolean;
   manualSaveTest: () => Promise<void>;
-  audioFiles: AudioFile[];
-  isLoadingFiles: boolean;
-  fetchAudioFiles: (chatId: string, messageId: string) => Promise<void>;
+  isLoading: boolean;
+  fetchResponseUrl: (chatId: string) => Promise<void>;
   currentMessageId: string;
+  currentResponseUrl: string;
 }
 
 interface AudioFile {
@@ -57,14 +57,14 @@ export const useSpeech = (): UseSpeechReturn => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isSavingToDatabase, setIsSavingToDatabase] = useState(false);
   const [isConnectedToSupabase, setIsConnectedToSupabase] = useState(false);
-  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentMessageId, setCurrentMessageId] = useState<string>('');
+  const [currentResponseUrl, setCurrentResponseUrl] = useState<string>('');
 
   // Service instances
   const orchestrationService = useRef<SpeechOrchestrationService | null>(null);
   const conversationService = useRef<ConversationService | null>(null);
-  const speechService = useRef(SpeechService.getInstance());
+  // const speechService = useRef(SpeechService.getInstance());
   const supabaseService = useRef(SupabaseService.getInstance());
 
   // Initialize services
@@ -88,8 +88,8 @@ export const useSpeech = (): UseSpeechReturn => {
         setVadActive(active);
         setVadConfidence(confidence);
       },
-      onSentenceComplete: async (transcriptText, audioBlob) => {
-        await handleSentenceComplete(transcriptText, audioBlob);
+      onSentenceComplete: async (transcriptText) => {
+        await handleSentenceComplete(transcriptText);
       },
       onError: (errorMessage) => {
         setError(errorMessage);
@@ -130,7 +130,7 @@ export const useSpeech = (): UseSpeechReturn => {
   }, []);
 
   // Handle completed sentences
-  const handleSentenceComplete = async (transcriptText: string, audioBlob?: Blob) => {
+  const handleSentenceComplete = async (transcriptText: string) => {
     if (!transcriptText.trim()) return;
 
     setIsSavingToDatabase(true);
@@ -138,20 +138,11 @@ export const useSpeech = (): UseSpeechReturn => {
 
     try {
       // Save transcript to database
-      const saveResult = await saveTranscriptToDatabase(transcriptText);
+      // const saveResult = 
+      await saveTranscriptToDatabase(transcriptText);
       
-      if (saveResult && audioBlob) {
-        // Process audio if available
-        const chatId = conversationService.current?.ensureChatId() || '';
-        const messageId = conversationService.current?.createNewMessage() || '';
-        
-        const audioResult = await speechService.current.processAudio(audioBlob, transcriptText);
-        
-        if (audioResult.success && audioResult.message) {
-          setAudioMessages(prev => [...prev, audioResult.message!]);
-          await fetchAudioFiles(chatId, messageId);
-        }
-      }
+      await fetchResponseUrl(currentChatId!);
+
     } catch (err) {
       console.error('Error handling sentence completion:', err);
       setError('Error processing sentence');
@@ -178,6 +169,9 @@ export const useSpeech = (): UseSpeechReturn => {
         if (result.chat_id && result.chat_id !== currentChatId) {
           setCurrentChatId(result.chat_id);
         }
+        if(result.message_id){
+          setCurrentMessageId(result.message_id);
+        }
         setError(null);
         return true;
       } else {
@@ -192,22 +186,17 @@ export const useSpeech = (): UseSpeechReturn => {
   };
 
   // Fetch audio files
-  const fetchAudioFiles = async (chatId: string, messageId: string) => {
+  const fetchResponseUrl = async (chatId: string) => {
     try {
-      setIsLoadingFiles(true);
-      const response = await fetch(`/api/files?chat_id=${chatId}&message_id=${messageId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const audioFiles = data.files.filter((file: AudioFile) => 
-          file.name.match(/\.(mp3|wav|ogg|m4a)$/i)
-        );
-        setAudioFiles(audioFiles);
+      setIsLoading(true);
+      const messages = await supabaseService.current.listenToChatMessagesAfter(chatId, currentMessageId);
+      if(messages.messages){
+        setCurrentResponseUrl(messages.messages[0]["audio_url"]);
       }
     } catch (error) {
       console.error('Error fetching audio files:', error);
     } finally {
-      setIsLoadingFiles(false);
+      setIsLoading(false);
     }
   };
 
@@ -291,9 +280,9 @@ export const useSpeech = (): UseSpeechReturn => {
     getChatMessages,
     isConnectedToSupabase,
     manualSaveTest,
-    audioFiles,
-    isLoadingFiles,
-    fetchAudioFiles,
+    isLoading,
+    fetchResponseUrl,
     currentMessageId,
+    currentResponseUrl,
   };
 };

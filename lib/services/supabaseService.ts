@@ -230,7 +230,7 @@ export class SupabaseService {
   }
 
   /**
-   * Get messages from a chat with better error handling
+   * Get messages from a chat with error handling
    */
   async getChatMessages(chatId: string): Promise<GetMessagesResponse> {
     try {
@@ -241,20 +241,98 @@ export class SupabaseService {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('VoiceActivityDetectorError fetching messages:', error);
+        console.error('SupabaseServiceError fetching messages:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true, messages: data || [] };
       
     } catch (error) {
-      console.error('VoiceActivityDetectorException fetching messages:', error);
+      console.error('SupabaseServiceException fetching messages:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
     }
   }
+
+  /**
+   * Get messages from a chat with chat id
+   */
+  async listenToChatMessagesAfter(chatId: string, message_id: string): Promise<GetMessagesResponse> {
+  try {
+    // Get the timestamp of the reference message
+    const { data: refMessage, error: refError } = await supabase
+      .from('chat_messages')
+      .select('created_at')
+      .eq('id', message_id)
+      .single();
+
+    if (refError) {
+      console.error('SupabaseServiceError fetching reference message:', refError);
+      return { success: false, error: refError.message };
+    }
+
+    const referenceTimestamp = refMessage.created_at;
+
+    // First, get any existing messages after the reference message
+    const { data: existingMessages, error: existingError } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .gt('created_at', referenceTimestamp)
+      .order('created_at', { ascending: true });
+
+    if (existingError) {
+      console.error('SupabaseServiceError fetching existing messages:', existingError);
+      return { success: false, error: existingError.message };
+    }
+
+    // If there are already messages, return them immediately
+    if (existingMessages && existingMessages.length > 0) {
+      return { success: true, messages: existingMessages };
+    }
+
+    // Set up real-time subscription to listen for new messages
+    return new Promise((resolve) => {
+      const subscription = supabase
+        .channel(`chat_messages_${chatId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `chat_id=eq.${chatId}`
+          },
+          (payload) => {
+            const newMessage = payload.new as any;
+            
+            // Check if the new message is after our reference timestamp
+            if (newMessage.created_at > referenceTimestamp) {
+              // Unsubscribe and return the new message
+              subscription.unsubscribe();
+              resolve({ success: true, messages: [newMessage] });
+            }
+          }
+        )
+        .subscribe();
+
+      // Optional: Add a timeout to prevent infinite waiting
+      setTimeout(() => {
+        subscription.unsubscribe();
+        resolve({ success: false, error: 'Timeout waiting for new messages' });
+      }, 60000); // 60 second timeout
+    });
+
+  } catch (error) {
+    console.error('SupabaseServiceException fetching messages:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
+}
 
   /**
    * Update chat context with better error handling
