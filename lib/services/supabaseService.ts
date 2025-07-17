@@ -67,7 +67,7 @@ export class SupabaseService {
 
       // hardcoded values
       const user_id = 'user_id1';
-      const ip = 'https://7dd2fe00da2e.ngrok-free.app';
+      const ip = 'https://db47e8fdc0b9.ngrok-free.app';
 
       const now = new Date().toISOString();
 
