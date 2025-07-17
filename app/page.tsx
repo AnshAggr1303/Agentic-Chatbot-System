@@ -16,7 +16,6 @@ export default function AudioChatPage() {
   
   const {
     isRecording,
-    audioMessages,
     isProcessing,
     transcript,
     interimTranscript,
@@ -34,7 +33,6 @@ export default function AudioChatPage() {
     startNewConversation,
     getChatMessages,
     isConnectedToSupabase,
-    manualSaveTest,
     isLoading,
     fetchResponseUrl,
     currentMessageId,
@@ -191,19 +189,6 @@ export default function AudioChatPage() {
           <div className="mb-6 flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
             <span className="ml-2 text-sm text-gray-400">Thinking...</span>
-          </div>
-        )}
-        
-        {/* Recent Messages */}
-        {audioMessages.length > 0 && (
-          <div className="mb-6 max-h-32 overflow-y-auto">
-            <div className="space-y-2">
-              {audioMessages.slice(-3).map((message, index) => (
-                <div key={index} className="bg-blue-500/20 rounded-lg p-3 border border-blue-500/30">
-                  <p className="text-sm text-blue-200">{message.text}</p>
-                </div>
-              ))}
-            </div>
           </div>
         )}
         

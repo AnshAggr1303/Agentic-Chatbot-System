@@ -2,14 +2,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
-import { SpeechService, AudioMessage } from '../lib/services/speechService';
 import SupabaseService from '../lib/services/supabaseService';
 import { SpeechOrchestrationService } from '../lib/services/orchestrationService';
 import { ConversationService } from '../lib/services/conversationService';
 
 export interface UseSpeechReturn {
   isRecording: boolean;
-  audioMessages: AudioMessage[];
   isProcessing: boolean;
   transcript: string;
   interimTranscript: string;
@@ -27,7 +25,6 @@ export interface UseSpeechReturn {
   startNewConversation: () => void;
   getChatMessages: (chatId: string) => Promise<any>;
   isConnectedToSupabase: boolean;
-  manualSaveTest: () => Promise<void>;
   isLoading: boolean;
   fetchResponseUrl: (chatId: string) => Promise<void>;
   currentMessageId: string;
@@ -44,7 +41,7 @@ interface AudioFile {
 export const useSpeech = (): UseSpeechReturn => {
   // State management
   const [isRecording, setIsRecording] = useState(false);
-  const [audioMessages, setAudioMessages] = useState<AudioMessage[]>([]);
+  // const [audioMessages, setAudioMessages] = useState<AudioMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
@@ -233,7 +230,6 @@ export const useSpeech = (): UseSpeechReturn => {
     if (conversationService.current) {
       conversationService.current.startNewConversation();
     }
-    setAudioMessages([]);
     setTranscript('');
     setInterimTranscript('');
   };
@@ -251,18 +247,8 @@ export const useSpeech = (): UseSpeechReturn => {
     }
   };
 
-  const manualSaveTest = async () => {
-    const completeTranscript = (transcript + interimTranscript).trim();
-    
-    if (completeTranscript) {
-      const saveSuccess = await saveTranscriptToDatabase(completeTranscript);
-      console.log('Manual test result:', saveSuccess);
-    }
-  };
-
   return {
     isRecording,
-    audioMessages,
     isProcessing,
     transcript,
     interimTranscript,
@@ -280,7 +266,6 @@ export const useSpeech = (): UseSpeechReturn => {
     startNewConversation,
     getChatMessages,
     isConnectedToSupabase,
-    manualSaveTest,
     isLoading,
     fetchResponseUrl,
     currentMessageId,
