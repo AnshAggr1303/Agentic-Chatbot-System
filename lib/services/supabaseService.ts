@@ -28,12 +28,6 @@ interface GetMessagesResponse {
   error?: string;
 }
 
-interface UpdateContextResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-}
-
 export class SupabaseService {
   private static instance: SupabaseService;
   private currentChatId: string | null = null;
@@ -79,7 +73,7 @@ export class SupabaseService {
         .single();
 
       if (chatError) {
-        console.error('VoiceActivityDetectorError inserting chat:', chatError);
+        console.error('SupabaseServiceError inserting chat:', chatError);
         throw new Error(`Failed to create chat: ${chatError.message}`);
       }
 
@@ -96,7 +90,7 @@ export class SupabaseService {
         .single();
 
       if (messageError) {
-        console.error('VoiceActivityDetectorError inserting message:', messageError);
+        console.error('SupabaseServiceError inserting message:', messageError);
         throw new Error(`Failed to create message: ${messageError.message}`);
       }
 
@@ -108,7 +102,7 @@ export class SupabaseService {
       };
 
     } catch (error) {
-      console.error('VoiceActivityDetectorError creating chat and message:', error);
+      console.error('SupabaseServiceError creating chat and message:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -138,7 +132,7 @@ export class SupabaseService {
         .single();
 
       if (messageError) {
-        console.error('VoiceActivityDetectorError inserting message:', messageError);
+        console.error('SupabaseServiceError inserting message:', messageError);
         throw new Error(`Failed to create message: ${messageError.message}`);
       }
 
@@ -149,7 +143,7 @@ export class SupabaseService {
       };
 
     } catch (error) {
-      console.error('VoiceActivityDetectorError adding message:', error);
+      console.error('SupabaseServiceError adding message:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -185,7 +179,7 @@ export class SupabaseService {
         return await this.createChatAndMessage(text);
       }
     } catch (error) {
-      console.error('VoiceActivityDetectorError sending speech text:', error);
+      console.error('SupabaseServiceError sending speech text:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -197,7 +191,7 @@ export class SupabaseService {
    * Add AI response to chat
    */
   async addAIResponse(chatId: string, response: string): Promise<CreateMessageResponse> {
-    return await this.addMessageToChat(chatId, response, 'AI'); // Changed from 'ASSISTANT' to 'AI'
+    return await this.addMessageToChat(chatId, response, 'AI');
   }
 
   /**
@@ -254,15 +248,27 @@ export class SupabaseService {
   async listenToChatMessagesAfter(chatId: string, message_id: string): Promise<GetMessagesResponse> {
   try {
     // Get the timestamp of the reference message
+    console.log(message_id);
+    console.log(chatId);
     const { data: refMessage, error: refError } = await supabase
       .from('chat_messages')
       .select('created_at')
       .eq('message_id', message_id)
-      .single();
+      .eq('chat_id', chatId)
+      .maybeSingle();
 
     if (refError) {
       console.error('SupabaseServiceError fetching reference message:', refError);
       return { success: false, error: refError.message };
+    }
+
+    if(!refMessage){
+      console.log("No messsages found with the message id")
+      return {
+        "success": false,
+        "error": "No message found with the message id",
+        "messages": []
+      };
     }
 
     const referenceTimestamp = refMessage.created_at;
@@ -327,35 +333,6 @@ export class SupabaseService {
 }
 
   /**
-   * Update chat context with better error handling
-   */
-  async updateChatContext(chatId: string, context: string): Promise<UpdateContextResponse> {
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ 
-          context: context,
-          updated_at: new Date().toISOString()
-        })
-        .eq('chat_id', chatId);
-
-      if (error) {
-        console.error('VoiceActivityDetectorError updating chat context:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, message: 'Chat context updated successfully' };
-      
-    } catch (error) {
-      console.error('VoiceActivityDetectorException updating chat context:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
-    }
-  }
-
-  /**
    * Get chat metadata
    */
   async getChatMetadata(chatId: string) {
@@ -367,7 +344,7 @@ export class SupabaseService {
         .single();
 
       if (error) {
-        console.error('VoiceActivityDetectorError fetching chat metadata:', error);
+        console.error('SupabaseServiceError fetching chat metadata:', error);
         return { success: false, error: error.message };
       }
 
@@ -389,12 +366,12 @@ export class SupabaseService {
     try {
       // First delete all messages in the chat
       const { error: messagesError } = await supabase
-        .from('chat_messages')
+        .from('chats')
         .delete()
         .eq('chat_id', chatId);
 
       if (messagesError) {
-        console.error('VoiceActivityDetectorError deleting messages:', messagesError);
+        console.error('SupabaseServiceError deleting messages:', messagesError);
         throw new Error(`Failed to delete messages: ${messagesError.message}`);
       }
 
@@ -405,7 +382,7 @@ export class SupabaseService {
         .eq('chat_id', chatId);
 
       if (chatError) {
-        console.error('VoiceActivityDetectorError deleting chat:', chatError);
+        console.error('SupabaseServiceError deleting chat:', chatError);
         throw new Error(`Failed to delete chat: ${chatError.message}`);
       }
 
@@ -439,7 +416,7 @@ export class SupabaseService {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        console.error('VoiceActivityDetectorError fetching user chats:', error);
+        console.error('SupabaseServiceError fetching user chats:', error);
         return { success: false, error: error.message };
       }
 

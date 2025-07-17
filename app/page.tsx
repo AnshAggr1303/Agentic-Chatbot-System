@@ -6,13 +6,19 @@ import { useState, useEffect, useRef } from 'react';
 import { Mic, Volume2, VolumeX, MicOff, Play, Pause, Download } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
-import { useAudioAmplitude } from '../hooks/useAudioAmplitude';
+import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
 
 export default function AudioChatPage() {
   const [isMuted, setIsMuted] = useState(false);
+  const [userInteractionPrompt, setUserInteractionPrompt] = useState(true);
   const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMutedState, setIsMutedState] = useState(false);
+  const [isLooped, setIsLooped] = useState(false);
   const splineRef = useRef<HTMLDivElement>(null);
+
+  const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
   
   const {
     isRecording,
@@ -38,8 +44,35 @@ export default function AudioChatPage() {
     currentMessageId,
     currentResponseUrl,
   } = useSpeech();
-  
-  const { audioAmplitude, playAudioWithAmplitude } = useAudioAmplitude(isMuted);
+
+  useEffect(() => {
+    if (currentResponseUrl && !isMuted && hasUserInteracted) {
+      // Add a small delay to ensure audio element is ready
+      const timer = setTimeout(() => {
+        playAudio(currentResponseUrl);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentResponseUrl, isMuted, hasUserInteracted, playAudio]);
+
+  // Handle initial user interaction
+  const handleInitialInteraction = () => {
+    setUserInteractionPrompt(false);
+  };
+
+  // Updated voice assistant toggle
+  const handleVoiceToggle = () => {
+    if (!hasUserInteracted) {
+      setUserInteractionPrompt(false);
+    }
+    
+    if (isMonitoring) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   useEffect(() => {
     if (splineRef.current) {
@@ -52,33 +85,37 @@ export default function AudioChatPage() {
 
   const bgColor = "#bbc9d8";
 
-  // Audio playback functions
-  const playAudio = (filename: string) => {
-    if (currentPlaying) {
-      const currentAudio = document.getElementById(currentPlaying) as HTMLAudioElement;
-      if (currentAudio) {
-        currentAudio.pause();
-      }
-    }
-
-    const audioElement = document.getElementById(filename) as HTMLAudioElement;
-    if (audioElement) {
-      audioElement.play();
-      setCurrentPlaying(filename);
-    }
-  };
-
-  const stopAudio = (filename: string) => {
-    const audioElement = document.getElementById(filename) as HTMLAudioElement;
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
-    }
-    setCurrentPlaying(null);
-  };
+  // Show interaction prompt if needed
+  if (userInteractionPrompt && !hasUserInteracted) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-gray-800 p-8 rounded-lg text-center max-w-md">
+          <h2 className="text-xl font-bold mb-4 text-white">Enable Audio</h2>
+          <p className="text-gray-300 mb-6">
+            Click the button below to enable audio playback for voice responses.
+          </p>
+          <button
+            onClick={handleInitialInteraction}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+          >
+            Enable Audio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-background text-gray-100 overflow-hidden">
+      {/* Hidden audio element for amplitude tracking */}
+      <audio 
+        id="audio" 
+        src={currentResponseUrl || undefined}
+        style={{ display: 'none' }}
+        loop={isLooped}
+        muted={isMutedState}
+        onEnded={() => setCurrentPlaying(null)} 
+      />
       <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-4">
         
         {/* Spline 3D Scene */}
@@ -216,7 +253,7 @@ export default function AudioChatPage() {
             {/* Voice Assistant Toggle */}
             <button
               type="button"
-              onClick={isMonitoring ? stopRecording : startRecording}
+              onClick={handleVoiceToggle}
               disabled={isProcessing}
               className={`w-20 h-20 rounded-full transition-all duration-200 disabled:opacity-50 flex items-center justify-center ${
                 isMonitoring 

@@ -48,7 +48,7 @@ class VoiceActivityDetector {
         }
       };
 
-      console.log('✅ Enhanced VoiceActivityDetector initialized');
+      console.log('✅ VoiceActivityDetector initialized');
     } catch (error) {
       console.error('Failed to initialize VoiceActivityDetector:', error);
       throw error;
@@ -164,7 +164,7 @@ class VoiceActivityDetector {
   startDetection(callback: (result: { isSpeech: boolean; confidence: number; energy: number; sentenceComplete: boolean }) => void): void {
     this.callback = callback;
     this.isActive = true;
-    console.log('🎧 Enhanced VAD detection started');
+    console.log('🎧 VAD detection started');
   }
 
   stopDetection(): void {
@@ -173,7 +173,7 @@ class VoiceActivityDetector {
     this.speechStartTime = null;
     this.silenceStartTime = null;
     this.lastSpeechTime = null;
-    console.log('🎧 Enhanced VAD detection stopped');
+    console.log('🎧 VAD detection stopped');
   }
 
   destroy(): void {
@@ -199,7 +199,7 @@ class VoiceActivityDetector {
       this.audioContext = null;
     }
     
-    console.log('🎧 Enhanced VoiceActivityDetector destroyed');
+    console.log('🎧 VoiceActivityDetector destroyed');
   }
 }
 

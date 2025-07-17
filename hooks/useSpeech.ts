@@ -26,9 +26,9 @@ export interface UseSpeechReturn {
   getChatMessages: (chatId: string) => Promise<any>;
   isConnectedToSupabase: boolean;
   isLoading: boolean;
-  fetchResponseUrl: (chatId: string) => Promise<void>;
+  fetchResponseUrl: (chatId: string,  messageId: string) => Promise<void>;
   currentMessageId: string;
-  currentResponseUrl: string;
+  currentResponseUrl: string | null;
 }
 
 interface AudioFile {
@@ -56,7 +56,7 @@ export const useSpeech = (): UseSpeechReturn => {
   const [isConnectedToSupabase, setIsConnectedToSupabase] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessageId, setCurrentMessageId] = useState<string>('');
-  const [currentResponseUrl, setCurrentResponseUrl] = useState<string>('');
+  const [currentResponseUrl, setCurrentResponseUrl] = useState<string | null>(null);
 
   // Service instances
   const orchestrationService = useRef<SpeechOrchestrationService | null>(null);
@@ -112,7 +112,7 @@ export const useSpeech = (): UseSpeechReturn => {
       if (orchestrationService.current) {
         const started = await orchestrationService.current.start();
         if (started) {
-          setIsMonitoring(true);
+          setIsMonitoring(false);
         }
       }
     };
@@ -138,7 +138,7 @@ export const useSpeech = (): UseSpeechReturn => {
       // const saveResult = 
       await saveTranscriptToDatabase(transcriptText);
       
-      await fetchResponseUrl(currentChatId!);
+      // await fetchResponseUrl(currentChatId!);
 
     } catch (err) {
       console.error('Error handling sentence completion:', err);
@@ -163,12 +163,17 @@ export const useSpeech = (): UseSpeechReturn => {
       const result = await supabaseService.current.sendSpeechText(transcriptText.trim());
       
       if (result.success) {
+        console.log(result.chat_id);
+        console.log(result.message_id);
         if (result.chat_id && result.chat_id !== currentChatId) {
           setCurrentChatId(result.chat_id);
         }
         if(result.message_id){
           console.log("current message id set!!!!!1");
           setCurrentMessageId(result.message_id);
+        }
+        if(result.chat_id && result.message_id){
+          fetchResponseUrl(result.chat_id, result.message_id);
         }
         setError(null);
         return true;
@@ -184,12 +189,14 @@ export const useSpeech = (): UseSpeechReturn => {
   };
 
   // Fetch audio files
-  const fetchResponseUrl = async (chatId: string) => {
+  const fetchResponseUrl = async (chatId: string, messageId: string) => {
     try {
       setIsLoading(true);
-      const messages = await supabaseService.current.listenToChatMessagesAfter(chatId, currentMessageId);
+      const messages = await supabaseService.current.listenToChatMessagesAfter(chatId, messageId);
       if(messages.messages){
         setCurrentResponseUrl(messages.messages[0]["audio_url"]);
+        console.log(messages.messages);
+        console.log(messages.messages[0]["audio_url"]);
       }
     } catch (error) {
       console.error('Error fetching audio files:', error);
