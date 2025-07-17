@@ -170,6 +170,7 @@ export const useSpeech = (): UseSpeechReturn => {
           setCurrentChatId(result.chat_id);
         }
         if(result.message_id){
+          console.log("current message id set!!!!!1");
           setCurrentMessageId(result.message_id);
         }
         setError(null);

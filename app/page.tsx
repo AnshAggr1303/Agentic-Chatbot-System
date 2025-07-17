@@ -29,10 +29,16 @@ export default function AudioChatPage() {
     microphoneActive,
     isMonitoring,
     currentChatId,
+    isSavingToDatabase,
+    clearError,
+    startNewConversation,
+    getChatMessages,
+    isConnectedToSupabase,
+    manualSaveTest,
+    isLoading,
+    fetchResponseUrl,
     currentMessageId,
-    audioFiles,
-    isLoadingFiles,
-    fetchAudioFiles
+    currentResponseUrl,
   } = useSpeech();
   
   const { audioAmplitude, playAudioWithAmplitude } = useAudioAmplitude(isMuted);
@@ -190,67 +196,11 @@ export default function AudioChatPage() {
           </div>
         </div>
         
-        {/* Audio Files Section */}
-        {audioFiles.length > 0 && (
-          <div className="mb-6 max-w-2xl mx-auto">
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-              <h3 className="text-lg font-medium text-white mb-3 text-center">
-                Generated Audio ({audioFiles.length})
-              </h3>
-              <div className="space-y-2">
-                {audioFiles.map((file, index) => (
-                  <div key={file.name} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-300">{file.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {(file.size / 1024).toFixed(1)} KB
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => currentPlaying === file.name ? stopAudio(file.name) : playAudio(file.name)}
-                        className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
-                      >
-                        {currentPlaying === file.name ? (
-                          <Pause className="h-4 w-4 text-white" />
-                        ) : (
-                          <Play className="h-4 w-4 text-white" />
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => downloadAudio(file.name)}
-                        className="p-2 bg-gray-600 hover:bg-gray-700 rounded-full transition-colors"
-                      >
-                        <Download className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-
-                    {/* Hidden audio element */}
-                    <audio
-                      id={file.name}
-                      preload="none"
-                      onEnded={() => setCurrentPlaying(null)}
-                      className="hidden"
-                    >
-                      <source 
-                        src={`/api/files/stream?chat_id=${currentChatId}&message_id=${currentMessageId}&filename=${file.name}`}
-                        type="audio/mpeg"
-                      />
-                    </audio>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Loading Audio Files */}
-        {isLoadingFiles && (
+        {/* Loading */}
+        {isLoading && (
           <div className="mb-6 flex items-center justify-center">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-gray-400">Loading audio files...</span>
+            <span className="ml-2 text-sm text-gray-400">Thinking...</span>
           </div>
         )}
         

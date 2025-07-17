@@ -130,17 +130,13 @@ export class SupabaseService {
       }
 
       // FIXED: Using correct enum values 'USER' and 'AI' instead of 'USER' and 'ASSISTANT'
-      // Generate UUID for message_id
-      const messageId = crypto.randomUUID();
       
       const { data: messageData, error: messageError } = await supabase
         .from('chat_messages')
         .insert({
-          message_id: messageId, // Explicitly set the message_id
           chat_id: chatId,
-          role: role, // Now using correct enum values: 'USER' or 'AI'
+          role: role,
           text: text.trim(),
-          created_at: new Date().toISOString()
         })
         .select('message_id')
         .single();
@@ -265,7 +261,7 @@ export class SupabaseService {
     const { data: refMessage, error: refError } = await supabase
       .from('chat_messages')
       .select('created_at')
-      .eq('id', message_id)
+      .eq('message_id', message_id)
       .single();
 
     if (refError) {
