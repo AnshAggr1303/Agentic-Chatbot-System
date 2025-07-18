@@ -17,8 +17,6 @@ export default function AudioChatPage() {
   const [isMutedState, setIsMutedState] = useState(false);
   const [isLooped, setIsLooped] = useState(false);
   const splineRef = useRef<HTMLDivElement>(null);
-
-  const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
   
   const {
     isRecording,
@@ -45,14 +43,24 @@ export default function AudioChatPage() {
     currentResponseUrl,
   } = useSpeech();
 
+  const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
+
   useEffect(() => {
     if (currentResponseUrl && !isMuted && hasUserInteracted) {
-      // Add a small delay to ensure audio element is ready
-      const timer = setTimeout(() => {
-        playAudio(currentResponseUrl);
-      }, 100);
-      
-      return () => clearTimeout(timer);
+      const audio = document.getElementById('audio') as HTMLAudioElement;
+      if (audio) {
+        audio.src = currentResponseUrl;
+        audio.load();
+        
+        // Add a small delay to prevent rapid calls
+        const playTimer = setTimeout(() => {
+          playAudio(currentResponseUrl);
+        }, 100);
+        
+        return () => {
+          clearTimeout(playTimer);
+        };
+      }
     }
   }, [currentResponseUrl, isMuted, hasUserInteracted, playAudio]);
 
@@ -110,9 +118,10 @@ export default function AudioChatPage() {
       {/* Hidden audio element for amplitude tracking */}
       <audio 
         id="audio" 
-        src={currentResponseUrl || undefined}
+        // src={currentResponseUrl || undefined}
         style={{ display: 'none' }}
         loop={isLooped}
+        preload='auto'
         muted={isMutedState}
         onEnded={() => setCurrentPlaying(null)} 
       />

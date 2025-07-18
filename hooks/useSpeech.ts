@@ -163,13 +163,10 @@ export const useSpeech = (): UseSpeechReturn => {
       const result = await supabaseService.current.sendSpeechText(transcriptText.trim());
       
       if (result.success) {
-        console.log(result.chat_id);
-        console.log(result.message_id);
         if (result.chat_id && result.chat_id !== currentChatId) {
           setCurrentChatId(result.chat_id);
         }
         if(result.message_id){
-          console.log("current message id set!!!!!1");
           setCurrentMessageId(result.message_id);
         }
         if(result.chat_id && result.message_id){
@@ -195,7 +192,6 @@ export const useSpeech = (): UseSpeechReturn => {
       const messages = await supabaseService.current.listenToChatMessagesAfter(chatId, messageId);
       if(messages.messages){
         setCurrentResponseUrl(messages.messages[0]["audio_url"]);
-        console.log(messages.messages);
         console.log(messages.messages[0]["audio_url"]);
       }
     } catch (error) {

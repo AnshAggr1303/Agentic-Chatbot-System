@@ -12,6 +12,7 @@ export const useAudio = (isMuted: boolean) => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
+  const isInitializingRef = useRef(false);
 
   // Track user interaction for autoplay policy compliance
   useEffect(() => {
@@ -44,34 +45,39 @@ export const useAudio = (isMuted: boolean) => {
   }, [hasUserInteracted, isMuted]);
 
   const playAudio = useCallback(async (audioUrl: string) => {
-    isMuted = false;
-    // Remove the early return that was blocking audio
-    if (!audioUrl) return;
+  if (!audioUrl || isMuted) return;
     
     try {
-      setIsPlaying(true);
-      
+      isInitializingRef.current = true;
       // Get the audio element
       const audio = document.getElementById('audio') as HTMLAudioElement;
       if (!audio) {
         console.error('Audio element not found');
+        isInitializingRef.current = false;
         return;
       }
-      
-      // Set the source and configure for single play
+
       audio.src = audioUrl;
-      setIsLooped(false);
-      setIsMutedState(isMuted); // Use the passed isMuted state
-      audio.load();
+      audio.loop = isLooped;
+
+      if (!audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
       
       // Create audio context only if it doesn't exist
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
-      
-      // Resume audio context if suspended (required for autoplay)
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
+
+      if (audioContextRef.current?.state === 'suspended') {
+        try {
+          await audioContextRef.current.resume();
+        } catch (error) {
+          console.warn('Failed to resume audio context:', error);
+          isInitializingRef.current = false;
+          return;
+        }
       }
       
       // Create source node only if it doesn't exist
@@ -101,25 +107,63 @@ export const useAudio = (isMuted: boolean) => {
         animationRef.current = requestAnimationFrame(updateAmplitude);
       };
       
-      audio.onplay = () => updateAmplitude();
-      audio.onended = () => {
+      if (!audio.onplay) {
+        audio.onplay = () => {
+          setIsPlaying(true);
+          setIsMutedState(false);
+          updateAmplitude();
+        }
+      
+        audio.onended = () => {
+          setIsPlaying(false);
+          setAudioAmplitude(0.9);
+          setIsMutedState(true);
+          setIsLooped(true);
+          if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+          }
+        };
+
+        audio.onerror = (error) => {
+          console.error('Audio playback error:', error);
+          setIsPlaying(false);
+          setAudioAmplitude(0.9);
+          isInitializingRef.current = false;
+        };
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Audio ready timeout'));
+        }, 5000);
+        
+        const onCanPlay = () => {
+          clearTimeout(timeout);
+          audio.removeEventListener('canplay', onCanPlay);
+          resolve();
+        };
+        
+        if (audio.readyState >= 3) { // HAVE_FUTURE_DATA
+          clearTimeout(timeout);
+          resolve();
+        } else {
+          audio.addEventListener('canplay', onCanPlay);
+        }
+      });
+      
+      try {
+        await audio.play();
+
+      } catch (playError) {
+        console.error('Audio play failed:', playError);
         setIsPlaying(false);
         setAudioAmplitude(0.9);
-        setIsMutedState(true);
-        setIsLooped(true);
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-        }
-      };
-      
-      // Only play if not muted
-      if (!isMuted) {
-        await audio.play();
       }
-    } catch (err) {
+    }catch (err) {
       console.error('Error playing audio:', err);
       setIsPlaying(false);
       setAudioAmplitude(0.9);
+      isInitializingRef.current = false;
     }
   }, [isMuted, isPlaying]);
 

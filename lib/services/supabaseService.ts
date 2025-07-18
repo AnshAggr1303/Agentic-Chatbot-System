@@ -57,7 +57,6 @@ export class SupabaseService {
 
       // hardcoded values
       const user_id = 'user_id1';
-      const ip = 'https://db47e8fdc0b9.ngrok-free.app';
 
       const now = new Date().toISOString();
 
@@ -66,7 +65,6 @@ export class SupabaseService {
         .from('chats')
         .insert({
           user_id: user_id,
-          ip: ip, 
           context: ''
         })
         .select('chat_id')
@@ -249,7 +247,6 @@ export class SupabaseService {
   try {
     // Get the timestamp of the reference message
     console.log(message_id);
-    console.log(chatId);
     const { data: refMessage, error: refError } = await supabase
       .from('chat_messages')
       .select('created_at')
