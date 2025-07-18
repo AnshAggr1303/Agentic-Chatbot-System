@@ -1,16 +1,29 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot } from 'lucide-react';
+import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
-import { useAuthRedirect } from '../lib/services/supabaseService';
+import SupabaseService, { useAuthRedirect } from '../lib/services/supabaseService';
 
 export default function AudioChatPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [userInteractionPrompt, setUserInteractionPrompt] = useState(true);
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try { 
+      const supabaseService = SupabaseService.getInstance();
+      await supabaseService.logout();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   const splineRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -352,6 +365,23 @@ export default function AudioChatPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut || isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-200/50 hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Logout"
+          >
+            <LogOut
+              size={16} 
+              className={`text-gray-600 ${isLoggingOut ? 'animate-spin' : ''}`}
+            />
+            <span className="text-sm text-gray-700 font-medium">
+              {isLoggingOut ? 'Logging out...' : 'Logout'}
+            </span>
+          </button>
         </div>
       </div>
     </div>

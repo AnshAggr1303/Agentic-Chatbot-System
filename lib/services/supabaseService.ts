@@ -1,6 +1,5 @@
 // lib/services/supabaseService.ts
 import { createClient } from '@supabase/supabase-js';
-import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 // Initialize Supabase client - Replace with your actual Supabase URL and key
@@ -30,6 +29,13 @@ interface GetMessagesResponse {
   error?: string;
 }
 
+interface CreateUserResponse {
+  success: boolean;
+  user_id?: string;
+  message?: string;
+  error?: string;
+}
+
 export const useAuthRedirect = () => {
   useEffect(() => {
     const checkAuth = async () => {
@@ -50,7 +56,18 @@ export const useAuthRedirect = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           window.location.href = '/login';
+          return;
         }
+
+        // Create or update user in database before proceeding
+        const supabaseService = SupabaseService.getInstance();
+        const userResult = await supabaseService.createOrUpdateUser(user);
+        
+        if (!userResult.success) {
+          console.error('Failed to create/update user:', userResult.error);
+          // Still proceed even if user creation fails, but log the error
+        }
+
       } catch (error) {
         console.error('Authentication check failed:', error);
         window.location.href = '/login';
@@ -61,9 +78,17 @@ export const useAuthRedirect = () => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
           window.location.href = '/login';
+        } else if (event === 'SIGNED_IN' && session?.user) {
+          // Create or update user when they sign in
+          const supabaseService = SupabaseService.getInstance();
+          const userResult = await supabaseService.createOrUpdateUser(session.user);
+          
+          if (!userResult.success) {
+            console.error('Failed to create/update user on sign in:', userResult.error);
+          }
         }
       }
     );
@@ -93,6 +118,157 @@ export class SupabaseService {
    */
   isConnectedToDatabase(): boolean {
     return this.isConnected;
+  }
+
+  /**
+   * Logout user from Supabase
+   */
+  async logout(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        return {
+          success: false,
+          error: `Failed to sign out: ${error.message}`
+        };
+      }
+
+      // Clear any local state
+      this.currentChatId = null;
+      this.isConnected = false;
+
+      return {
+        success: true
+      };
+
+    } catch (error) {
+      console.error('Exception during logout:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
+   * Create or update user in database
+   */
+  async createOrUpdateUser(user: any): Promise<CreateUserResponse> {
+    try {
+      if (!user || !user.id) {
+        return {
+          success: false,
+          error: 'User object is required'
+        };
+      }
+
+      // Extract user information
+      const userData = {
+        user_id: user.id,
+        email: user.email,
+        google_id: user.user_metadata?.provider_id || user.id, // Use provider_id for Google, fallback to user.id
+        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || null,
+        profile_picture: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        is_google_auth: user.app_metadata?.provider === 'google' || false
+      };
+
+      // Check if user already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('user_id')
+        .eq('user_id', userData.user_id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing user:', checkError);
+        return {
+          success: false,
+          error: `Failed to check existing user: ${checkError.message}`
+        };
+      }
+
+      if (existingUser) {
+        // Update existing user
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            email: userData.email,
+            name: userData.name,
+            profile_picture: userData.profile_picture,
+            is_google_auth: userData.is_google_auth
+          })
+          .eq('user_id', userData.user_id);
+
+        if (updateError) {
+          console.error('Error updating user:', updateError);
+          return {
+            success: false,
+            error: `Failed to update user: ${updateError.message}`
+          };
+        }
+
+        return {
+          success: true,
+          user_id: userData.user_id,
+          message: 'User updated successfully'
+        };
+      } else {
+        // Create new user
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert(userData);
+
+        if (insertError) {
+          console.error('Error creating user:', insertError);
+          return {
+            success: false,
+            error: `Failed to create user: ${insertError.message}`
+          };
+        }
+
+        return {
+          success: true,
+          user_id: userData.user_id,
+          message: 'User created successfully'
+        };
+      }
+
+    } catch (error) {
+      console.error('Exception creating/updating user:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
+   * Get user from database
+   */
+  async getUser(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, user: data };
+      
+    } catch (error) {
+      console.error('Exception fetching user:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
   }
 
   /**
