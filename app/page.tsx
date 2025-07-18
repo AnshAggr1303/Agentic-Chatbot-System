@@ -1,47 +1,35 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, MessageCircle, User, Bot } from 'lucide-react';
+import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
+import { useAuthRedirect } from '../lib/services/supabaseService';
 
 export default function AudioChatPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [userInteractionPrompt, setUserInteractionPrompt] = useState(true);
-  // const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
-  // const [isPlaying, setIsPlaying] = useState(false);
-  // const [isMutedState, setIsMutedState] = useState(false);
-  // const [isLooped, setIsLooped] = useState(false);
-  // const [messages, setMessages] = useState([]);
   const splineRef = useRef<HTMLDivElement>(null);
   
   const {
-    // isRecording,
     isProcessing,
     transcript,
     interimTranscript,
-    // isListening,
     startRecording,
     stopRecording,
-    // error,
     vadActive,
     vadConfidence,
     microphoneActive,
     isMonitoring,
-    // currentChatId,
-    // isSavingToDatabase,
-    // clearError,
-    // startNewConversation,
-    // getChatMessages,
     isConnectedToSupabase,
     isLoading,
-    // fetchResponseUrl,
-    // currentMessageId,
     currentResponseUrl,
     currentResponseText,
   } = useSpeech();
+
+  useAuthRedirect();
 
   const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
 
@@ -111,7 +99,7 @@ export default function AudioChatPage() {
   if (userInteractionPrompt && !hasUserInteracted) {
     return (
       <div className="fixed inset-0 bg-[#fafafc] flex items-center justify-center z-50">
-        <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 p-12 rounded-xl text-center max-w-md">
+        <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 px-8 py-6 rounded-3xl text-center max-w-md">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Volume2 className="h-8 w-8 text-gray-600" />
           </div>
@@ -121,7 +109,7 @@ export default function AudioChatPage() {
           </p>
           <button
             onClick={handleInitialInteraction}
-            className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-2xl font-medium transition-colors"
           >
             Enable Audio
           </button>
@@ -158,13 +146,13 @@ export default function AudioChatPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="flex flex-col lg:flex-row gap-12 items-center justify-center mx-auto">
           
           {/* Left Column - Conversation */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex-1/2">
             
             {/* Current Transcript */}
-            <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6 min-h-[120px] flex items-center">
+            <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6 min-h-[120px] flex items-center">
               <div className="w-full">
                 {transcript || interimTranscript || currentResponseText ? (
                   <div className="space-y-4">
@@ -189,7 +177,7 @@ export default function AudioChatPage() {
                       </div>
                     )}
                     {currentResponseText && (
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-3 justify-center">
                         <div className="w-8 h-8 bg-green-100 border border-green-600 shadow-xs shadow-green-700/10 rounded-full flex items-center justify-center flex-shrink-0">
                           <Bot className="h-4 w-4 text-green-600" />
                         </div>
@@ -202,9 +190,11 @@ export default function AudioChatPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">
+                  <div className="text-center py-8 overflow-visible">
+                    <div className='h-16 w-16 items-center justify-center flex mb-6 bg-gray-50 mx-auto border border-gray-300 p-4 rounded-full overflow-visible'>
+                      <Send className="text-gray-800 translate-y-0.5 -translate-x-0.5" />
+                    </div> 
+                    <p className="text-gray-700 font-playfair">
                       {isMonitoring 
                         ? "Listening... start speaking to begin"
                         : "Click the microphone to start"
@@ -224,7 +214,7 @@ export default function AudioChatPage() {
 
             {/* Processing State */}
             {(isLoading || isProcessing) && (
-              <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6">
+              <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                     <Bot className="h-4 w-4 text-gray-600" />
@@ -245,7 +235,7 @@ export default function AudioChatPage() {
           </div>
 
           {/* Right Column - Controls and Visualizer */}
-          <div className="space-y-8">
+          <div className="space-y-8 flex-1/2">
             
             {/* 3D Visualizer */}
             <div className="flex items-center justify-center mb-12">
@@ -265,24 +255,24 @@ export default function AudioChatPage() {
             </div>
 
             {/* Status Indicators */}
-            <div className="flex flex-wrap gap-2 justify-center">
+            {/* <div className="flex flex-wrap gap-2 justify-center">
               {isMonitoring && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                <div className="flex items-center gap-2 px-5 py-2 bg-green-50 border border-green-200 text-green-800 rounded-full text-sm">
                   <div className={`w-2 h-2 rounded-full ${vadActive ? 'bg-green-500 animate-pulse' : 'bg-green-400'}`}></div>
                   {vadActive ? 'Voice detected' : 'Monitoring'}
                 </div>
               )}
               
               {microphoneActive && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                <div className="flex items-center gap-2 px-5 py-2 bg-red-50 border border-red-200 text-red-800 rounded-full text-sm">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
                   Recording
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Voice Activity Level */}
-            {isMonitoring && (
+            {/* {isMonitoring && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>Voice Activity</span>
@@ -297,10 +287,10 @@ export default function AudioChatPage() {
                   ></div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Main Controls */}
-            <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6">
+            <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6">
               <div className="flex items-center justify-center gap-4">
                 
                 {/* Mute Toggle */}
@@ -310,7 +300,7 @@ export default function AudioChatPage() {
                   className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
                     isMuted 
                       ? 'bg-red-100 hover:bg-red-200 text-red-600' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      : 'bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700'
                   }`}
                   title={isMuted ? 'Unmute' : 'Mute'}
                 >
@@ -353,7 +343,7 @@ export default function AudioChatPage() {
               
               {/* Instructions */}
               <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-700 font-playfair">
                   {isMonitoring 
                     ? "Voice monitoring active - speak naturally"
                     : "Click the microphone to start listening"

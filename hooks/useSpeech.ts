@@ -7,56 +7,33 @@ import { SpeechOrchestrationService } from '../lib/services/orchestrationService
 import { ConversationService } from '../lib/services/conversationService';
 
 export interface UseSpeechReturn {
-  isRecording: boolean;
   isProcessing: boolean;
   transcript: string;
   interimTranscript: string;
-  isListening: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
-  error: string | null;
   vadActive: boolean;
   vadConfidence: number;
   microphoneActive: boolean;
   isMonitoring: boolean;
-  currentChatId: string | null;
-  isSavingToDatabase: boolean;
-  clearError: () => void;
-  startNewConversation: () => void;
-  getChatMessages: (chatId: string) => Promise<any>;
   isConnectedToSupabase: boolean;
   isLoading: boolean;
-  fetchResponseUrl: (chatId: string,  messageId: string) => Promise<void>;
-  currentMessageId: string;
   currentResponseUrl: string | null;
   currentResponseText: string | null;
 }
 
-interface AudioFile {
-  name: string;
-  size: number;
-  created_at: string;
-  url?: string;
-}
-
 export const useSpeech = (): UseSpeechReturn => {
   // State management
-  const [isRecording, setIsRecording] = useState(false);
-  // const [audioMessages, setAudioMessages] = useState<AudioMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [vadActive, setVadActive] = useState(false);
   const [vadConfidence, setVadConfidence] = useState(0);
   const [microphoneActive, setMicrophoneActive] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const [isSavingToDatabase, setIsSavingToDatabase] = useState(false);
   const [isConnectedToSupabase, setIsConnectedToSupabase] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMessageId, setCurrentMessageId] = useState<string>('');
   const [currentResponseUrl, setCurrentResponseUrl] = useState<string | null>(null);
   const [currentResponseText, setCurrentResponseText] = useState<string | null>(null);
 
@@ -90,9 +67,6 @@ export const useSpeech = (): UseSpeechReturn => {
       onSentenceComplete: async (transcriptText) => {
         await handleSentenceComplete(transcriptText);
       },
-      onError: (errorMessage) => {
-        setError(errorMessage);
-      }
     });
 
     // Setup conversation service callbacks
@@ -100,14 +74,10 @@ export const useSpeech = (): UseSpeechReturn => {
       onChatIdChange: (chatId) => {
         setCurrentChatId(chatId);
       },
-      onMessageIdChange: (messageId) => {
-        setCurrentMessageId(messageId);
-      }
     });
 
     // Test Supabase connection
     setIsConnectedToSupabase(true);
-    setError(null);
 
     // Start VAD monitoring
     const initializeServices = async () => {
@@ -131,8 +101,6 @@ export const useSpeech = (): UseSpeechReturn => {
   // Handle completed sentences
   const handleSentenceComplete = async (transcriptText: string) => {
     if (!transcriptText.trim()) return;
-
-    setIsSavingToDatabase(true);
     setIsProcessing(true);
 
     try {
@@ -144,9 +112,7 @@ export const useSpeech = (): UseSpeechReturn => {
 
     } catch (err) {
       console.error('Error handling sentence completion:', err);
-      setError('Error processing sentence');
     } finally {
-      setIsSavingToDatabase(false);
       setIsProcessing(false);
       
       // Clear transcripts after processing
@@ -168,21 +134,15 @@ export const useSpeech = (): UseSpeechReturn => {
         if (result.chat_id && result.chat_id !== currentChatId) {
           setCurrentChatId(result.chat_id);
         }
-        if(result.message_id){
-          setCurrentMessageId(result.message_id);
-        }
         if(result.chat_id && result.message_id){
           fetchResponseUrl(result.chat_id, result.message_id);
         }
-        setError(null);
         return true;
       } else {
-        setError(`Failed to save to database: ${result.error}`);
         return false;
       }
     } catch (err) {
       console.error('Exception while saving transcript:', err);
-      setError(`Error saving transcript: ${err instanceof Error ? err.message : 'Unknown error'}`);
       return false;
     }
   };
@@ -209,73 +169,33 @@ export const useSpeech = (): UseSpeechReturn => {
     if (!orchestrationService.current) return;
     
     const started = await orchestrationService.current.start();
-    if (started) {
-      setIsRecording(true);
-    }
   };
 
   const stopRecording = () => {
     if (orchestrationService.current) {
       orchestrationService.current.stop();
     }
-    setIsRecording(false);
     setIsMonitoring(false);
     setMicrophoneActive(false);
     setVadActive(false);
     setVadConfidence(0);
     setTranscript('');
     setInterimTranscript('');
-    setIsListening(false);
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
-
-  const startNewConversation = () => {
-    if (conversationService.current) {
-      conversationService.current.startNewConversation();
-    }
-    setTranscript('');
-    setInterimTranscript('');
-  };
-
-  const getChatMessages = async (chatId: string) => {
-    try {
-      const result = await supabaseService.current.getChatMessages(chatId);
-      return result;
-    } catch (error) {
-      console.error('Error fetching chat messages:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      };
-    }
-  };
+  }
 
   return {
-    isRecording,
     isProcessing,
     transcript,
     interimTranscript,
-    isListening,
     startRecording,
     stopRecording,
-    error,
     vadActive,
     vadConfidence,
     microphoneActive,
     isMonitoring,
-    currentChatId,
-    isSavingToDatabase,
-    clearError,
-    startNewConversation,
-    getChatMessages,
     isConnectedToSupabase,
     isLoading,
-    fetchResponseUrl,
-    currentMessageId,
     currentResponseUrl,
     currentResponseText,
   };
-};
+}

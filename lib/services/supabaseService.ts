@@ -1,5 +1,7 @@
 // lib/services/supabaseService.ts
 import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 // Initialize Supabase client - Replace with your actual Supabase URL and key
 const supabase = createClient(
@@ -27,6 +29,50 @@ interface GetMessagesResponse {
   messages?: any[];
   error?: string;
 }
+
+export const useAuthRedirect = () => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error checking auth session:', error);
+          window.location.href = '/login';
+          return;
+        }
+
+        if (!session) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Authentication check failed:', error);
+        window.location.href = '/login';
+      }
+    };
+
+    checkAuth();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+          window.location.href = '/login';
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+};
 
 export class SupabaseService {
   private static instance: SupabaseService;

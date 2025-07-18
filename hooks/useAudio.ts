@@ -3,8 +3,6 @@ import { useCallback, useState, useRef, useEffect } from "react";
 export const useAudio = (isMuted: boolean) => {
   const [audioAmplitude, setAudioAmplitude] = useState(0.9);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLooped, setIsLooped] = useState(true);
-  const [isMutedState, setIsMutedState] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
   // Store audio context and source to prevent recreation
@@ -120,7 +118,6 @@ export const useAudio = (isMuted: boolean) => {
         audio.onplay = () => {
           console.log('Audio started playing');
           setIsPlaying(true);
-          setIsMutedState(false);
           updateAmplitude();
         };
         
@@ -128,7 +125,6 @@ export const useAudio = (isMuted: boolean) => {
           console.log('Audio ended');
           setIsPlaying(false);
           setAudioAmplitude(0.9);
-          setIsMutedState(false); // Keep unmuted for next audio
           if (animationRef.current) {
             cancelAnimationFrame(animationRef.current);
           }
@@ -198,5 +194,5 @@ export const useAudio = (isMuted: boolean) => {
     }
   }, [isMuted]);
 
-  return { audioAmplitude, playAudio, isPlaying, isLooped, isMutedState, hasUserInteracted };
+  return { audioAmplitude, playAudio, hasUserInteracted };
 };
