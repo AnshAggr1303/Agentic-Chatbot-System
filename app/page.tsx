@@ -1,18 +1,39 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut } from 'lucide-react';
+import { useState, useEffect, useRef, Ref } from 'react';
+import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut, X, AudioLines, Moon, Sun } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
 import SupabaseService, { useAuthRedirect } from '../lib/services/supabaseService';
+import { Application } from '@splinetool/runtime';
+
+interface Message{
+    id: string,
+    type: string,
+    content: string,
+    timestamp: Date
+}
 
 export default function AudioChatPage() {
   const [isMuted, setIsMuted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [userInteractionPrompt, setUserInteractionPrompt] = useState(true);
-
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isAudioMode, setIsAudioMode] = useState(true);
+  
+  // Text chat state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef: Ref<HTMLDivElement | null> = useRef(null);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -24,7 +45,7 @@ export default function AudioChatPage() {
     }
   };
 
-  const splineRef = useRef<HTMLDivElement>(null);
+  const [splineApplication, setSplineApplication] = useState<Application | null>(null);
   
   const {
     isProcessing,
@@ -32,9 +53,6 @@ export default function AudioChatPage() {
     interimTranscript,
     startRecording,
     stopRecording,
-    vadActive,
-    vadConfidence,
-    microphoneActive,
     isMonitoring,
     isConnectedToSupabase,
     isLoading,
@@ -44,11 +62,101 @@ export default function AudioChatPage() {
 
   useAuthRedirect();
 
-  const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
+  const { playAudio, hasUserInteracted } = useAudio(isMuted);
+
+  // Text chat functions
+  const scrollToBottom = () => {
+    if(messagesEndRef.current){
+      messagesEndRef.current!.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (splineApplication) {
+      splineApplication.setBackgroundColor(isDarkMode ? "#111827" : "#f4f4f9");
+    }
+  }, [isDarkMode]);
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toLocaleString(),
+      type: 'user',
+      content: inputValue.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue.trim();
+    setInputValue('');
+    setIsTyping(true);
+    setIsWaitingForResponse(true);
+
+    try {
+      // Save to Supabase using the same method as speech
+      const supabaseService = SupabaseService.getInstance();
+      const result = await supabaseService.sendText(messageText, 'text');
+
+      if (result.success && result.chat_id && result.message_id) {
+        // Update current chat ID if it changed
+        if (result.chat_id !== currentChatId) {
+          setCurrentChatId(result.chat_id);
+        }
+
+        // Listen for AI response
+        const messages = await supabaseService.listenToChatMessagesAfter(result.chat_id, result.message_id);
+        
+        if (messages.success && messages.messages && messages.messages.length > 0) {
+          const aiResponse = messages.messages[0];
+          const botMessage = {
+            id: (Date.now() + 1).toLocaleString(),
+            type: 'bot',
+            content: aiResponse.text,
+            timestamp: new Date(aiResponse.created_at)
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+        }
+      } else {
+        // Fallback error message
+        const errorMessage = {
+          id: (Date.now() + 1).toLocaleString(),
+          type: 'bot',
+          content: 'Sorry, I encountered an error processing your message.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage = {
+        id: (Date.now() + 1).toLocaleString(),
+        type: 'bot',
+        content: 'Sorry, I encountered an error processing your message.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+      setIsWaitingForResponse(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   useEffect(() => {
     if (currentResponseUrl && !isMuted && hasUserInteracted) {
-      const audio = document.getElementById('audio') as HTMLAudioElement;
+      const audio = document.getElementById('audio');
       if (audio) {
         const playTimer = setTimeout(async () => {
           try {
@@ -84,16 +192,7 @@ export default function AudioChatPage() {
   };
 
   useEffect(() => {
-    if (splineRef.current) {
-      const splineInstance = (splineRef.current as any).spline;
-      if (splineInstance && splineInstance.setVariable) {
-        splineInstance.setVariable('scale', audioAmplitude);
-      }
-    }
-  }, [audioAmplitude]);
-
-  useEffect(() => {
-    const audio = document.getElementById('audio') as HTMLAudioElement;
+    const audio = document.getElementById('audio');
     if (audio) {
       const handleAudioEnd = () => {
         // setCurrentPlaying(null);
@@ -132,7 +231,11 @@ export default function AudioChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f4f9] text-gray-900">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gray-900 text-gray-100' 
+        : 'bg-[#f4f4f9] text-gray-900'
+    }`}>
       {/* Hidden audio element */}
       <audio 
         id="audio" 
@@ -144,245 +247,409 @@ export default function AudioChatPage() {
         onCanPlay={() => console.log('Audio can play')}
         onPlay={() => console.log('Audio play event')}
         onPause={() => console.log('Audio pause event')}
-        onEnded={() => {
-          // setCurrentPlaying(null);
-          // setIsPlaying(false);
-        }}
         onError={(e) => console.error('Audio element error:', e)}
       />
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="min-h-screen max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-medium text-gray-900 mb-2">Study Buddy</h1>
-          <p className="text-gray-600">Ask me any query you have</p>
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <h1 className={`text-4xl font-medium ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-900'
+            }`}>
+              Study Buddy
+            </h1>
+            
+          </div>
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+            Ask me any query you have
+          </p>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex flex-col lg:flex-row gap-12 items-center justify-center mx-auto">
-          
-          {/* Left Column - Conversation */}
-          <div className="space-y-6 flex-1/2">
-            
-            {/* Current Transcript */}
-            <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6 min-h-[120px] flex items-center">
-              <div className="w-full">
-                {transcript || interimTranscript || currentResponseText ? (
-                  <div className="space-y-4">
-                    {transcript && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-600 leading-relaxed">{transcript}</p>
-                        </div>
-                      </div>
-                    )}
-                    {interimTranscript && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-500 italic leading-relaxed">{interimTranscript}</p>
-                        </div>
-                      </div>
-                    )}
-                    {currentResponseText && (
-                      <div className="flex items-center gap-3 justify-center">
-                        <div className="w-8 h-8 bg-green-100 border border-green-600 shadow-xs shadow-green-700/10 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Bot className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-600 leading-relaxed">
-                            {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 overflow-visible">
-                    <div className='h-16 w-16 items-center justify-center flex mb-6 bg-gray-50 mx-auto border border-gray-300 p-4 rounded-full overflow-visible'>
-                      <Send className="text-gray-800 translate-y-0.5 -translate-x-0.5" />
-                    </div> 
-                    <p className="text-gray-700 font-playfair">
-                      {isMonitoring 
-                        ? "Listening... start speaking to begin"
-                        : "Click the microphone to start"
-                      }
-                    </p>
-                  </div>
-                )}
+        {/* Audio Mode - Original Implementation */}
+        {isAudioMode && (
+          <div className="flex flex-col lg:flex-row gap-12 items-center justify-center mx-auto">
+            <div className="space-y-8">
+              
+              {/* 3D Visualizer */}
+              <div className="flex items-center justify-center mb-12">
+                <div className="w-96 h-80 rounded-full overflow-hidden bottom-4">
+                  <Spline
+                    scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
+                    className="w-96! h-96!"
+                    onLoad={(spline) => {
+                      spline.setBackgroundColor(isDarkMode ? "#111827" : "#f4f4f9");
+                      setSplineApplication(spline);
+                    }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Status and Error Messages */}
-            {/* {error && (
-              <div className="bg-red-50 border border-red-200 shadow-gray-300/20 shadow-lg rounded-lg p-4">
-                <p className="text-red-800 text-sm">{error}</p>
+              {/* Current Transcript */}
+              <div className={`border rounded-3xl py-4 px-6 min-h-[80px] flex items-center shadow-lg transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
+                  : 'bg-white border-gray-200 shadow-gray-50/20'
+              }`}>
+                <div className="w-full">
+                  {transcript || interimTranscript || currentResponseText ? (
+                    <div className="space-y-4">
+                      {transcript && (
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isDarkMode ? 'bg-blue-900' : 'bg-blue-50'
+                          }`}>
+                            <User className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`leading-relaxed ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                            }`}>
+                              {transcript}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {currentResponseText && (
+                        <div className="flex items-center gap-3 justify-center">
+                          <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+                            isDarkMode 
+                              ? 'bg-green-900 border-green-600 shadow-green-700/10' 
+                              : 'bg-green-50 border-green-600 shadow-green-700/10'
+                          }`}>
+                            <Bot className="h-4 w-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`leading-relaxed ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                            }`}>
+                              {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-2 overflow-visible">
+                      <div className={`h-16 w-16 items-center justify-center flex mb-2 mx-auto border p-4 rounded-full overflow-visible ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600' 
+                          : 'bg-gray-50 border-gray-300'
+                      }`}>
+                        <AudioLines className={isDarkMode ? 'text-gray-200' : 'text-gray-800'} />
+                      </div> 
+                      <p className={`font-playfair ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                      }`}>
+                        {isMonitoring 
+                          ? "Listening... start speaking to begin"
+                          : "Click the microphone to start"
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )} */}
 
-            {/* Processing State */}
-            {(isLoading || isProcessing) && (
-              <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300"></div>
-                      <span className="text-gray-600 ml-2">
-                        {isProcessing ? 'Processing...' : 'Thinking...'}
-                      </span>
+              {/* Processing State */}
+              {(isLoading || isProcessing) && (
+                <div className={`border rounded-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
+                    : 'bg-white border-gray-200 shadow-gray-50/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}>
+                      <Bot className={`h-4 w-4 ${
+                        isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-150 ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-300 ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                        <span className={`ml-2 ${
+                          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                        }`}>
+                          {isProcessing ? 'Processing...' : 'Thinking...'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column - Controls and Visualizer */}
-          <div className="space-y-8 flex-1/2">
-            
-            {/* 3D Visualizer */}
-            <div className="flex items-center justify-center mb-12">
-              <div className="w-96 h-80 rounded-full overflow-hidden bottom-4" ref={splineRef}>
-                <Spline
-                  scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
-                  className="w-96! h-96!"
-                  onLoad={(spline) => {
-                    (splineRef.current as any).spline = spline;
-                    spline.setBackgroundColor("#f4f4f9");
-                    if (spline.setVariable) {
-                      spline.setVariable('scale', audioAmplitude);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Status Indicators */}
-            {/* <div className="flex flex-wrap gap-2 justify-center">
-              {isMonitoring && (
-                <div className="flex items-center gap-2 px-5 py-2 bg-green-50 border border-green-200 text-green-800 rounded-full text-sm">
-                  <div className={`w-2 h-2 rounded-full ${vadActive ? 'bg-green-500 animate-pulse' : 'bg-green-400'}`}></div>
-                  {vadActive ? 'Voice detected' : 'Monitoring'}
-                </div>
               )}
-              
-              {microphoneActive && (
-                <div className="flex items-center gap-2 px-5 py-2 bg-red-50 border border-red-200 text-red-800 rounded-full text-sm">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                  Recording
-                </div>
-              )}
-            </div> */}
 
-            {/* Voice Activity Level */}
-            {/* {isMonitoring && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Voice Activity</span>
-                  <span>{(vadConfidence * 100).toFixed(0)}%</span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-100 rounded-full ${
-                      vadActive ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
-                    style={{ width: `${vadConfidence * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )} */}
+              {/* Main Controls */}
+              <div className={`border rounded-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
+                  : 'bg-white border-gray-200 shadow-gray-50/20'
+              }`}>
+                <div className="flex items-center justify-center gap-4">
+                  
+                  {/* Mute Toggle */}
+                  <div className='flex flex-1/3 items-center justify-center'>
+                    <button
+                      type="button"
+                      onClick={() => setIsMuted(!isMuted)}
+                      className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
+                        isMuted 
+                          ? 'bg-red-100 hover:bg-red-200 text-red-600' 
+                          : isDarkMode
+                            ? 'bg-gray-700 hover:bg-gray-600 border border-gray-600 text-gray-300'
+                            : 'bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700'
+                      }`}
+                      title={isMuted ? 'Unmute' : 'Mute'}
+                    >
+                      {isMuted ? (
+                        <VolumeX className="h-5 w-5" />
+                      ) : (
+                        <Volume2 className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
 
-            {/* Main Controls */}
-            <div className="bg-white border border-gray-200 shadow-lg shadow-gray-50/20 rounded-3xl py-4 px-6">
-              <div className="flex items-center justify-center gap-4">
+                  {/* Main Voice Button */}
+                  <div className='flex flex-1/3 items-center justify-center'>
+                    <button
+                      type="button"
+                      onClick={handleVoiceToggle}
+                      disabled={isProcessing}
+                      className={`w-16 h-16 rounded-[100%] overflow-clip transition-all duration-200 disabled:opacity-50 flex items-center justify-center ${
+                        isMonitoring 
+                          ? 'bg-green-100 hover:bg-green-200 text-green-700 ring-2 ring-green-200' 
+                          : isDarkMode
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      }`}
+                      title={isMonitoring ? 'Stop monitoring' : 'Start monitoring'}
+                    >
+                      {isMonitoring ? (
+                        <Mic className="h-7 w-7" />
+                      ) : (
+                        <MicOff className="h-7 w-7" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Switch to Text Mode */}
+                  <div className="flex flex-1/3 items-center justify-center">
+                    <button
+                      onClick={() => setIsAudioMode(false)}
+                      className={`w-12 h-12 rounded-full border transition-all duration-200 flex items-center justify-center ${
+                        isDarkMode 
+                          ? 'bg-gray-700 hover:bg-gray-600 border-gray-600 text-gray-300' 
+                          : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
+                      }`}
+                      title="Switch to text mode"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
                 
-                {/* Mute Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
-                    isMuted 
-                      ? 'bg-red-100 hover:bg-red-200 text-red-600' 
-                      : 'bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700'
-                  }`}
-                  title={isMuted ? 'Unmute' : 'Mute'}
-                >
-                  {isMuted ? (
-                    <VolumeX className="h-5 w-5" />
-                  ) : (
-                    <Volume2 className="h-5 w-5" />
-                  )}
-                </button>
-
-                {/* Main Voice Button */}
-                <button
-                  type="button"
-                  onClick={handleVoiceToggle}
-                  disabled={isProcessing}
-                  className={`w-16 h-16 rounded-[100%] overflow-clip transition-all duration-200 disabled:opacity-50 flex items-center justify-center ${
-                    isMonitoring 
-                      ? 'bg-green-100 hover:bg-green-200 text-green-700 ring-2 ring-green-200' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
-                  title={isMonitoring ? 'Stop monitoring' : 'Start monitoring'}
-                >
-                  {isMonitoring ? (
-                    <Mic className="h-7 w-7" />
-                  ) : (
-                    <MicOff className="h-7 w-7" />
-                  )}
-                </button>
-
-                {/* Connection Status */}
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isConnectedToSupabase ? 'bg-green-500' : 'bg-red-500'
-                  }`}></div>
-                  <span className="text-sm text-gray-600">
-                    {isConnectedToSupabase ? 'Connected' : 'Disconnected'}
-                  </span>
+                {/* Instructions */}
+                <div className="mt-4 text-center">
+                  <p className={`text-sm font-playfair ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {isMonitoring 
+                      ? "Voice monitoring active - speak naturally"
+                      : "Click the microphone to start listening"
+                    }
+                  </p>
                 </div>
-              </div>
-              
-              {/* Instructions */}
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-700 font-playfair">
-                  {isMonitoring 
-                    ? "Voice monitoring active - speak naturally"
-                    : "Click the microphone to start listening"
-                  }
-                </p>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Text Mode */}
+        {!isAudioMode && (
+          <div className="h-[calc(100vh-12rem)] mx-auto">
+            {/* Chat Container */}
+            <div className={`border flex flex-col h-full rounded-3xl overflow-hidden shadow-lg transition-colors duration-300 ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
+                : 'bg-gray-50 border-gray-200 shadow-gray-50/20'
+            }`}>
+              
+              {/* Messages Area */}
+              <div className="overflow-y-auto flex grow p-6 space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${
+                      message.type === 'user' ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    {message.type === 'bot' && (
+                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+                        isDarkMode 
+                          ? 'bg-green-900 border-gray-600 shadow-green-700/5' 
+                          : 'bg-green-50 border-gray-200 shadow-green-700/5'
+                      }`}>
+                        <Bot className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                        message.type === 'user'
+                          ? isDarkMode
+                            ? 'bg-indigo-900 text-gray-200'
+                            : 'bg-indigo-100 text-gray-700'
+                          : isDarkMode
+                            ? 'bg-transparent text-gray-300'
+                            : 'bg-transparent text-gray-700'
+                      }`}
+                    >
+                      <p className="text-sm font-normal leading-relaxed">{message.content}</p>
+                    </div>
+                    {message.type === 'user' && (
+                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isDarkMode 
+                          ? 'bg-blue-900 border-gray-600' 
+                          : 'bg-blue-50 border-gray-300'
+                      }`}>
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Typing indicator */}
+                {(isTyping || isWaitingForResponse) && (
+                  <div className="flex gap-3 justify-start">
+                    <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+                      isDarkMode 
+                        ? 'bg-green-900 border-gray-600 shadow-green-700/10' 
+                        : 'bg-green-100 border-gray-300 shadow-green-700/10'
+                    }`}>
+                      <Bot className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className={`px-4 py-2 rounded-2xl max-w-xs ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
+                      <div className="flex items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-150 ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-300 ${
+                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                        }`}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+              
+              {/* Input Area */}
+              <div className={`border-t px-4 pb-2 pt-4 min-h-fit  transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700' 
+                  : 'bg-white border-gray-200'
+              }`}>
+                <div className="flex gap-3 items-center">
+                  <div className="flex-1">
+                    <textarea
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className={`w-full resize-none border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
+                          : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-gray-900'
+                      }`}
+                      rows={1}
+                      style={{ minHeight: '44px', maxHeight: '120px' }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
+                    title="Send message"
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                      isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
+                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                    }`}
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsAudioMode(true)}
+                    title="Switch to audio mode"
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                      isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
+                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                    }`}
+                  >
+                    <AudioLines className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Logout floating action button (FAB) */}
         <div className="fixed bottom-4 right-4 z-50">
           <button
             onClick={handleLogout}
             disabled={isLoggingOut || isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-lg shadow-gray-200/50 hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 px-4 py-2 border rounded-lg shadow-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-700 hover:bg-gray-700 active:bg-gray-600 shadow-gray-900/50' 
+                : 'bg-white border-gray-200 hover:bg-gray-50 active:bg-gray-100 shadow-gray-200/50'
+            }`}
             title="Logout"
           >
             <LogOut
               size={16} 
-              className={`text-gray-600 ${isLoggingOut ? 'animate-spin' : ''}`}
+              className={`${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              } ${isLoggingOut ? 'animate-spin' : ''}`}
             />
-            <span className="text-sm text-gray-700 font-medium">
+            <span className={`text-sm font-medium ${
+              isDarkMode ? 'text-gray-200' : 'text-gray-700'
+            }`}>
               {isLoggingOut ? 'Logging out...' : 'Logout'}
             </span>
           </button>
         </div>
+
+        {/* Theme toggle button */}
+        <button
+          onClick={toggleTheme}
+          className={`fixed top-4 right-4 z-50 p-4 rounded-full transition-colors duration-200 ${
+            isDarkMode 
+              ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400' 
+              : 'bg-white hover:bg-gray-50 border border-gray-200 text-gray-700'
+          }`}
+          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDarkMode ? (
+            <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
+          )}
+        </button>
       </div>
     </div>
   );

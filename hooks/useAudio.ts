@@ -142,19 +142,19 @@ export const useAudio = (isMuted: boolean) => {
 
       // Wait for audio to be ready
       await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Audio ready timeout'));
-        }, 10000); // Increased timeout
+        // const timeout = setTimeout(() => {
+        //   reject(new Error('Audio ready timeout'));
+        // }, 10000); // Increased timeout
         
         const onCanPlay = () => {
           console.log('Audio ready to play');
-          clearTimeout(timeout);
+          // clearTimeout(timeout);
           audio.removeEventListener('canplaythrough', onCanPlay);
           resolve();
         };
         
         if (audio.readyState >= 3) { // HAVE_FUTURE_DATA
-          clearTimeout(timeout);
+          // clearTimeout(timeout);
           resolve();
         } else {
           audio.addEventListener('canplaythrough', onCanPlay);

@@ -103,17 +103,21 @@ export const useSpeech = (): UseSpeechReturn => {
     if (!transcriptText.trim()) return;
     setIsProcessing(true);
 
+    console.log("1");
+
     try {
       // Save transcript to database
       // const saveResult = 
       await saveTranscriptToDatabase(transcriptText);
-      
-      // await fetchResponseUrl(currentChatId!);
+
+      console.log("2");
 
     } catch (err) {
       console.error('Error handling sentence completion:', err);
     } finally {
       setIsProcessing(false);
+
+    console.log("3");
       
       // Clear transcripts after processing
       setTimeout(() => {
@@ -127,8 +131,12 @@ export const useSpeech = (): UseSpeechReturn => {
   const saveTranscriptToDatabase = async (transcriptText: string): Promise<boolean> => {
     if (!transcriptText.trim()) return false;
 
+    console.log("11");
+
     try {
-      const result = await supabaseService.current.sendSpeechText(transcriptText.trim());
+      const result = await supabaseService.current.sendText(transcriptText.trim());
+
+      console.log("12");
       
       if (result.success) {
         if (result.chat_id && result.chat_id !== currentChatId) {
@@ -137,6 +145,8 @@ export const useSpeech = (): UseSpeechReturn => {
         if(result.chat_id && result.message_id){
           fetchResponseUrl(result.chat_id, result.message_id);
         }
+
+        console.log("13");
         return true;
       } else {
         return false;

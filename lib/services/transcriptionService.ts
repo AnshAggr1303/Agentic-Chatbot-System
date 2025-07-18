@@ -87,7 +87,7 @@ export class TranscriptionService {
       this.recognition.start();
       return true;
     } catch (error) {
-      console.error('Failed to start speech recognition:', error);
+      // console.log('Failed to start speech recognition:', error);
       return false;
     }
   }

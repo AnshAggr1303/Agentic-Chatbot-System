@@ -182,7 +182,7 @@ export class SupabaseService {
         .maybeSingle();
 
       if (checkError) {
-        console.error('Error checking existing user:', checkError);
+        console.log('Error checking existing user:', checkError);
         return {
           success: false,
           error: `Failed to check existing user: ${checkError.message}`
@@ -202,7 +202,7 @@ export class SupabaseService {
           .eq('user_id', userData.user_id);
 
         if (updateError) {
-          console.error('Error updating user:', updateError);
+          console.log('Error updating user:', updateError);
           return {
             success: false,
             error: `Failed to update user: ${updateError.message}`
@@ -221,7 +221,7 @@ export class SupabaseService {
           .insert(userData);
 
         if (insertError) {
-          console.error('Error creating user:', insertError);
+          console.log('Error creating user:', insertError);
           return {
             success: false,
             error: `Failed to create user: ${insertError.message}`
@@ -274,7 +274,7 @@ export class SupabaseService {
   /**
    * Create a new chat and first message
    */
-  async createChatAndMessage(text: string): Promise<CreateChatAndMessageResponse> {
+  async createChatAndMessage(text: string, type: 'audio' | 'text' = 'audio'): Promise<CreateChatAndMessageResponse> {
     try {
 
       const now = new Date().toISOString();
@@ -300,7 +300,8 @@ export class SupabaseService {
         .insert({
           chat_id: this.currentChatId,
           role: 'USER',
-          text: text.trim()
+          text: text.trim(),
+          message_type: type
         })
         .select('message_id')
         .single();
@@ -329,7 +330,7 @@ export class SupabaseService {
   /**
    * Add a message to existing chat
    */
-  async addMessageToChat(chatId: string, text: string, role: 'USER' | 'AI' = 'USER'): Promise<CreateMessageResponse> {
+  async addMessageToChat(chatId: string, text: string, role: 'USER' | 'AI' = 'USER', type: 'audio' | 'text' = 'audio'): Promise<CreateMessageResponse> {
     try {
       if (!text || text.trim() === '') {
         throw new Error('Text content is required');
@@ -343,6 +344,7 @@ export class SupabaseService {
           chat_id: chatId,
           role: role,
           text: text.trim(),
+          message_type: type
         })
         .select('message_id')
         .single();
@@ -371,7 +373,7 @@ export class SupabaseService {
    * Send speech text to database (main function for STT integration)
    * This is the primary method called by useSpeech hook
    */
-  async sendSpeechText(text: string): Promise<CreateChatAndMessageResponse> {
+  async sendText(text: string, type: 'audio' | 'text' = 'audio'): Promise<CreateChatAndMessageResponse> {
     try {
       // Validate text content
       if (!text || text.trim() === '') {
@@ -383,7 +385,7 @@ export class SupabaseService {
 
       // If we have an active chat, add to it; otherwise create new chat
       if (this.currentChatId) {
-        const result = await this.addMessageToChat(this.currentChatId, text);
+        const result = await this.addMessageToChat(this.currentChatId, text, type);
         return {
           success: result.success,
           chat_id: this.currentChatId,
@@ -392,7 +394,7 @@ export class SupabaseService {
           error: result.error
         };
       } else {
-        return await this.createChatAndMessage(text);
+        return await this.createChatAndMessage(text, type);
       }
     } catch (error) {
       console.error('SupabaseServiceError sending speech text:', error);
