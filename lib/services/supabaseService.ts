@@ -101,16 +101,13 @@ export class SupabaseService {
   async createChatAndMessage(text: string): Promise<CreateChatAndMessageResponse> {
     try {
 
-      // hardcoded values
-      const user_id = 'user_id1';
-
       const now = new Date().toISOString();
 
       // Step 1: Insert chat record with the generated chat_id
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .insert({
-          user_id: user_id,
+          user_id: (await supabase.auth.getUser()).data.user?.id || "user_id1",
         })
         .select('chat_id')
         .single();
