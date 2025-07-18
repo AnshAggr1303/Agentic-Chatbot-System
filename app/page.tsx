@@ -1,9 +1,7 @@
 "use client"
 
-// app/page.tsx
-
 import { useState, useEffect, useRef } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, Play, Pause, Download } from 'lucide-react';
+import { Mic, Volume2, VolumeX, MicOff, MessageCircle, User, Bot } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
@@ -12,67 +10,57 @@ import "../app/globals.css";
 export default function AudioChatPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [userInteractionPrompt, setUserInteractionPrompt] = useState(true);
-  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMutedState, setIsMutedState] = useState(false);
-  const [isLooped, setIsLooped] = useState(false);
+  // const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+  // const [isPlaying, setIsPlaying] = useState(false);
+  // const [isMutedState, setIsMutedState] = useState(false);
+  // const [isLooped, setIsLooped] = useState(false);
+  // const [messages, setMessages] = useState([]);
   const splineRef = useRef<HTMLDivElement>(null);
   
   const {
-    isRecording,
+    // isRecording,
     isProcessing,
     transcript,
     interimTranscript,
-    isListening,
+    // isListening,
     startRecording,
     stopRecording,
-    error,
+    // error,
     vadActive,
     vadConfidence,
     microphoneActive,
     isMonitoring,
-    currentChatId,
-    isSavingToDatabase,
-    clearError,
-    startNewConversation,
-    getChatMessages,
+    // currentChatId,
+    // isSavingToDatabase,
+    // clearError,
+    // startNewConversation,
+    // getChatMessages,
     isConnectedToSupabase,
     isLoading,
-    fetchResponseUrl,
-    currentMessageId,
+    // fetchResponseUrl,
+    // currentMessageId,
     currentResponseUrl,
+    currentResponseText,
   } = useSpeech();
 
   const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
 
   useEffect(() => {
-    console.log('currentResponseUrl changed:', currentResponseUrl);
-    console.log('isMuted:', isMuted);
-    console.log('hasUserInteracted:', hasUserInteracted);
-    
     if (currentResponseUrl && !isMuted && hasUserInteracted) {
-      console.log('Conditions met, attempting to play audio');
-      
       const audio = document.getElementById('audio') as HTMLAudioElement;
       if (audio) {
-        // Clear any existing timeouts
         const playTimer = setTimeout(async () => {
           try {
-            console.log('Calling playAudio with URL:', currentResponseUrl);
             await playAudio(currentResponseUrl);
           } catch (error) {
             console.error('Error in playAudio call:', error);
           }
-        }, 500); // Increased delay
+        }, 500);
         
         return () => {
           clearTimeout(playTimer);
         };
-      } else {
-        console.error('Audio element not found');
       }
-    } else {
-      console.log('Conditions not met for audio playback');
     }
   }, [currentResponseUrl, isMuted, hasUserInteracted, playAudio]);
 
@@ -104,36 +92,36 @@ export default function AudioChatPage() {
   }, [audioAmplitude]);
 
   useEffect(() => {
-  const audio = document.getElementById('audio') as HTMLAudioElement;
-  if (audio) {
-    const handleAudioEnd = () => {
-      console.log('Audio playback completed');
-      setCurrentPlaying(null);
-      setIsPlaying(false);
-    };
-    
-    audio.addEventListener('ended', handleAudioEnd);
-    
-    return () => {
-      audio.removeEventListener('ended', handleAudioEnd);
-    };
-  }
-}, []);
-
-  const bgColor = "#bbc9d8";
+    const audio = document.getElementById('audio') as HTMLAudioElement;
+    if (audio) {
+      const handleAudioEnd = () => {
+        // setCurrentPlaying(null);
+        // setIsPlaying(false);
+      };
+      
+      audio.addEventListener('ended', handleAudioEnd);
+      
+      return () => {
+        audio.removeEventListener('ended', handleAudioEnd);
+      };
+    }
+  }, []);
 
   // Show interaction prompt if needed
   if (userInteractionPrompt && !hasUserInteracted) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-gray-800 p-8 rounded-lg text-center max-w-md">
-          <h2 className="text-xl font-bold mb-4 text-white">Enable Audio</h2>
-          <p className="text-gray-300 mb-6">
-            Click the button below to enable audio playback for voice responses.
+      <div className="fixed inset-0 bg-[#fafafc] flex items-center justify-center z-50">
+        <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 p-12 rounded-xl text-center max-w-md">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Volume2 className="h-8 w-8 text-gray-600" />
+          </div>
+          <h2 className="text-xl font-medium mb-3 text-gray-900">Enable Audio</h2>
+          <p className="text-gray-600 mb-8 leading-relaxed">
+            Allow audio playback to hear voice responses from the assistant.
           </p>
           <button
             onClick={handleInitialInteraction}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium transition-colors"
           >
             Enable Audio
           </button>
@@ -143,8 +131,8 @@ export default function AudioChatPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-gray-100 overflow-hidden">
-      {/* Hidden audio element for amplitude tracking */}
+    <div className="min-h-screen bg-[#f4f4f9] text-gray-900">
+      {/* Hidden audio element */}
       <audio 
         id="audio" 
         style={{ display: 'none' }}
@@ -156,190 +144,223 @@ export default function AudioChatPage() {
         onPlay={() => console.log('Audio play event')}
         onPause={() => console.log('Audio pause event')}
         onEnded={() => {
-          console.log('Audio ended event');
-          setCurrentPlaying(null);
-          setIsPlaying(false);
+          // setCurrentPlaying(null);
+          // setIsPlaying(false);
         }}
         onError={(e) => console.error('Audio element error:', e)}
       />
-      <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-4">
-        
-        {/* Spline 3D Scene */}
-        <div className="flex items-center justify-center mb-12">
-          <div className="w-96 h-80 rounded-full overflow-hidden bottom-4" ref={splineRef}>
-            <Spline
-              scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
-              className="w-96! h-96!"
-              onLoad={(spline) => {
-                (splineRef.current as any).spline = spline;
-                spline.setBackgroundColor(bgColor);
-                if (spline.setVariable) {
-                  spline.setVariable('scale', audioAmplitude);
-                }
-              }}
-            />
-          </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-medium text-gray-900 mb-2">Study Buddy</h1>
+          <p className="text-gray-600">Ask me any query you have</p>
         </div>
-        
-        {/* Error Display */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-300 text-center">{error}</p>
-          </div>
-        )}
-        
-        {/* Status Indicators */}
-        <div className="mb-4 flex items-center justify-center gap-4">
-          {isMonitoring && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 rounded-full">
-              <div className={`w-2 h-2 rounded-full ${vadActive ? 'bg-green-400 animate-pulse' : 'bg-green-600'}`}></div>
-              <span className="text-sm text-green-400">
-                {vadActive ? 'Voice detected' : 'Monitoring...'}
-              </span>
-            </div>
-          )}
+
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           
-          {microphoneActive && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-red-500/20 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
-              <span className="text-sm text-red-400">Recording...</span>
-            </div>
-          )}
-          
-          {isListening && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-              <span className="text-sm text-blue-400">Listening...</span>
-            </div>
-          )}
-          
-          {isProcessing && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/20 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-              <span className="text-sm text-yellow-400">Processing...</span>
-            </div>
-          )}
-        </div>
-        
-        {/* VAD Confidence Display */}
-        {isMonitoring && (
-          <div className="mb-4 flex items-center justify-center">
-            <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-100 ${
-                  vadActive ? 'bg-green-500' : 'bg-gray-500'
-                }`}
-                style={{ width: `${vadConfidence * 100}%` }}
-              ></div>
-            </div>
-            <span className="ml-2 text-sm text-gray-400">
-              {(vadConfidence * 100).toFixed(0)}%
-            </span>
-          </div>
-        )}
-        
-        {/* Transcript Display */}
-        <div className="mb-8 min-h-[120px] flex items-center justify-center">
-          <div className="w-full max-w-2xl">
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-              <div className="text-center">
-                <div className="text-lg text-white leading-relaxed min-h-[60px] flex items-center justify-center">
-                  {transcript && <span className="mr-1">{transcript}</span>}
-                  {interimTranscript && <span className="text-gray-400 italic">{interimTranscript}</span>}
-                  {!transcript && !interimTranscript && isMonitoring && !vadActive && (
-                    <span className="text-gray-400 italic">
-                      Ready to listen... Say something to start recording
-                    </span>
-                  )}
-                  {!transcript && !interimTranscript && vadActive && (
-                    <span className="text-green-400 italic">
-                      Voice detected, processing...
-                    </span>
-                  )}
-                  {!transcript && !interimTranscript && !isMonitoring && (
-                    <span className="text-gray-500">
-                      Click the mic button to start voice monitoring
-                    </span>
-                  )}
-                </div>
+          {/* Left Column - Conversation */}
+          <div className="space-y-6">
+            
+            {/* Current Transcript */}
+            <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6 min-h-[120px] flex items-center">
+              <div className="w-full">
+                {transcript || interimTranscript || currentResponseText ? (
+                  <div className="space-y-4">
+                    {transcript && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-600 leading-relaxed">{transcript}</p>
+                        </div>
+                      </div>
+                    )}
+                    {interimTranscript && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-500 italic leading-relaxed">{interimTranscript}</p>
+                        </div>
+                      </div>
+                    )}
+                    {currentResponseText && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-green-100 border border-green-600 shadow-xs shadow-green-700/10 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Bot className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-600 leading-relaxed">
+                            {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">
+                      {isMonitoring 
+                        ? "Listening... start speaking to begin"
+                        : "Click the microphone to start"
+                      }
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Loading */}
-        {isLoading && (
-          <div className="mb-6 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-gray-400">Thinking...</span>
-          </div>
-        )}
-        
-        {/* Controls */}
-        <div className="relative">
-          <div className="flex items-center justify-center gap-6">
-            
-            {/* Mute Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsMuted(!isMuted)}
-              className={`w-16 h-16 rounded-full transition-all duration-200 flex items-center justify-center ${
-                isMuted 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-gray-600 hover:bg-gray-700'
-              }`}
-            >
-              {isMuted ? (
-                <VolumeX className="h-6 w-6 text-white" />
-              ) : (
-                <Volume2 className="h-6 w-6 text-white" />
-              )}
-            </button>
 
-            {/* Voice Assistant Toggle */}
-            <button
-              type="button"
-              onClick={handleVoiceToggle}
-              disabled={isProcessing}
-              className={`w-20 h-20 rounded-full transition-all duration-200 disabled:opacity-50 flex items-center justify-center ${
-                isMonitoring 
-                  ? 'bg-green-600 hover:bg-green-700 ring-2 ring-green-400' 
-                  : 'bg-gray-600 hover:bg-gray-700'
-              } ${microphoneActive ? 'animate-pulse' : ''}`}
-            >
-              {isMonitoring ? (
-                <Mic className={`h-8 w-8 text-white ${vadActive ? 'animate-pulse' : ''}`} />
-              ) : (
-                <MicOff className="h-8 w-8 text-white" />
-              )}
-            </button>
+            {/* Status and Error Messages */}
+            {/* {error && (
+              <div className="bg-red-50 border border-red-200 shadow-gray-300/20 shadow-lg rounded-lg p-4">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )} */}
 
-            {/* Status Text */}
-            <div className="text-sm text-gray-400 max-w-32 text-center">
-              {isMonitoring ? (
-                <div>
-                  <div className="font-medium">Voice Active</div>
-                  <div className="text-xs">
-                    {microphoneActive ? 'Recording...' : 'Waiting...'}
+            {/* Processing State */}
+            {(isLoading || isProcessing) && (
+              <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-300"></div>
+                      <span className="text-gray-600 ml-2">
+                        {isProcessing ? 'Processing...' : 'Thinking...'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <div className="font-medium">Voice Off</div>
-                  <div className="text-xs">Click to start</div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Controls and Visualizer */}
+          <div className="space-y-8">
+            
+            {/* 3D Visualizer */}
+            <div className="flex items-center justify-center mb-12">
+              <div className="w-96 h-80 rounded-full overflow-hidden bottom-4" ref={splineRef}>
+                <Spline
+                  scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
+                  className="w-96! h-96!"
+                  onLoad={(spline) => {
+                    (splineRef.current as any).spline = spline;
+                    spline.setBackgroundColor("#f4f4f9");
+                    if (spline.setVariable) {
+                      spline.setVariable('scale', audioAmplitude);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Status Indicators */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {isMonitoring && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  <div className={`w-2 h-2 rounded-full ${vadActive ? 'bg-green-500 animate-pulse' : 'bg-green-400'}`}></div>
+                  {vadActive ? 'Voice detected' : 'Monitoring'}
+                </div>
+              )}
+              
+              {microphoneActive && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                  Recording
                 </div>
               )}
             </div>
-          </div>
-          
-          {/* Instructions */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              {isMonitoring 
-                ? "Speak naturally - recording will start and stop automatically"
-                : "Click the microphone to enable voice monitoring"
-              }
-            </p>
+
+            {/* Voice Activity Level */}
+            {isMonitoring && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Voice Activity</span>
+                  <span>{(vadConfidence * 100).toFixed(0)}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-100 rounded-full ${
+                      vadActive ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
+                    style={{ width: `${vadConfidence * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* Main Controls */}
+            <div className="bg-[#eeeef3] border border-[#d8d8dc] shadow-lg shadow-[#d4d4d8]/20 rounded-xl p-6">
+              <div className="flex items-center justify-center gap-4">
+                
+                {/* Mute Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsMuted(!isMuted)}
+                  className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
+                    isMuted 
+                      ? 'bg-red-100 hover:bg-red-200 text-red-600' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  }`}
+                  title={isMuted ? 'Unmute' : 'Mute'}
+                >
+                  {isMuted ? (
+                    <VolumeX className="h-5 w-5" />
+                  ) : (
+                    <Volume2 className="h-5 w-5" />
+                  )}
+                </button>
+
+                {/* Main Voice Button */}
+                <button
+                  type="button"
+                  onClick={handleVoiceToggle}
+                  disabled={isProcessing}
+                  className={`w-16 h-16 rounded-[100%] overflow-clip transition-all duration-200 disabled:opacity-50 flex items-center justify-center ${
+                    isMonitoring 
+                      ? 'bg-green-100 hover:bg-green-200 text-green-700 ring-2 ring-green-200' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  }`}
+                  title={isMonitoring ? 'Stop monitoring' : 'Start monitoring'}
+                >
+                  {isMonitoring ? (
+                    <Mic className="h-7 w-7" />
+                  ) : (
+                    <MicOff className="h-7 w-7" />
+                  )}
+                </button>
+
+                {/* Connection Status */}
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    isConnectedToSupabase ? 'bg-green-500' : 'bg-red-500'
+                  }`}></div>
+                  <span className="text-sm text-gray-600">
+                    {isConnectedToSupabase ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Instructions */}
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  {isMonitoring 
+                    ? "Voice monitoring active - speak naturally"
+                    : "Click the microphone to start listening"
+                  }
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

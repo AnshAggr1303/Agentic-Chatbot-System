@@ -29,6 +29,7 @@ export interface UseSpeechReturn {
   fetchResponseUrl: (chatId: string,  messageId: string) => Promise<void>;
   currentMessageId: string;
   currentResponseUrl: string | null;
+  currentResponseText: string | null;
 }
 
 interface AudioFile {
@@ -50,13 +51,14 @@ export const useSpeech = (): UseSpeechReturn => {
   const [vadActive, setVadActive] = useState(false);
   const [vadConfidence, setVadConfidence] = useState(0);
   const [microphoneActive, setMicrophoneActive] = useState(false);
-  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [isMonitoring, setIsMonitoring] = useState(true);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isSavingToDatabase, setIsSavingToDatabase] = useState(false);
   const [isConnectedToSupabase, setIsConnectedToSupabase] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessageId, setCurrentMessageId] = useState<string>('');
   const [currentResponseUrl, setCurrentResponseUrl] = useState<string | null>(null);
+  const [currentResponseText, setCurrentResponseText] = useState<string | null>(null);
 
   // Service instances
   const orchestrationService = useRef<SpeechOrchestrationService | null>(null);
@@ -112,7 +114,7 @@ export const useSpeech = (): UseSpeechReturn => {
       if (orchestrationService.current) {
         const started = await orchestrationService.current.start();
         if (started) {
-          setIsMonitoring(false);
+          setIsMonitoring(true);
         }
       }
     };
@@ -192,6 +194,7 @@ export const useSpeech = (): UseSpeechReturn => {
       const messages = await supabaseService.current.listenToChatMessagesAfter(chatId, messageId);
       if(messages.messages){
         setCurrentResponseUrl(messages.messages[0]["audio_url"]);
+        setCurrentResponseText(messages.messages[0]["text"]);
         console.log(messages.messages[0]["audio_url"]);
       }
     } catch (error) {
@@ -273,5 +276,6 @@ export const useSpeech = (): UseSpeechReturn => {
     fetchResponseUrl,
     currentMessageId,
     currentResponseUrl,
+    currentResponseText,
   };
 };
