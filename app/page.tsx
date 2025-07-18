@@ -46,21 +46,33 @@ export default function AudioChatPage() {
   const { audioAmplitude, playAudio, hasUserInteracted } = useAudio(isMuted);
 
   useEffect(() => {
+    console.log('currentResponseUrl changed:', currentResponseUrl);
+    console.log('isMuted:', isMuted);
+    console.log('hasUserInteracted:', hasUserInteracted);
+    
     if (currentResponseUrl && !isMuted && hasUserInteracted) {
+      console.log('Conditions met, attempting to play audio');
+      
       const audio = document.getElementById('audio') as HTMLAudioElement;
       if (audio) {
-        audio.src = currentResponseUrl;
-        audio.load();
-        
-        // Add a small delay to prevent rapid calls
-        const playTimer = setTimeout(() => {
-          playAudio(currentResponseUrl);
-        }, 100);
+        // Clear any existing timeouts
+        const playTimer = setTimeout(async () => {
+          try {
+            console.log('Calling playAudio with URL:', currentResponseUrl);
+            await playAudio(currentResponseUrl);
+          } catch (error) {
+            console.error('Error in playAudio call:', error);
+          }
+        }, 500); // Increased delay
         
         return () => {
           clearTimeout(playTimer);
         };
+      } else {
+        console.error('Audio element not found');
       }
+    } else {
+      console.log('Conditions not met for audio playback');
     }
   }, [currentResponseUrl, isMuted, hasUserInteracted, playAudio]);
 
@@ -91,6 +103,23 @@ export default function AudioChatPage() {
     }
   }, [audioAmplitude]);
 
+  useEffect(() => {
+  const audio = document.getElementById('audio') as HTMLAudioElement;
+  if (audio) {
+    const handleAudioEnd = () => {
+      console.log('Audio playback completed');
+      setCurrentPlaying(null);
+      setIsPlaying(false);
+    };
+    
+    audio.addEventListener('ended', handleAudioEnd);
+    
+    return () => {
+      audio.removeEventListener('ended', handleAudioEnd);
+    };
+  }
+}, []);
+
   const bgColor = "#bbc9d8";
 
   // Show interaction prompt if needed
@@ -118,12 +147,20 @@ export default function AudioChatPage() {
       {/* Hidden audio element for amplitude tracking */}
       <audio 
         id="audio" 
-        // src={currentResponseUrl || undefined}
         style={{ display: 'none' }}
-        loop={isLooped}
-        preload='auto'
-        muted={isMutedState}
-        onEnded={() => setCurrentPlaying(null)} 
+        preload="auto"
+        crossOrigin="anonymous"
+        loop={false}
+        onLoadStart={() => console.log('Audio load started')}
+        onCanPlay={() => console.log('Audio can play')}
+        onPlay={() => console.log('Audio play event')}
+        onPause={() => console.log('Audio pause event')}
+        onEnded={() => {
+          console.log('Audio ended event');
+          setCurrentPlaying(null);
+          setIsPlaying(false);
+        }}
+        onError={(e) => console.error('Audio element error:', e)}
       />
       <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-4">
         

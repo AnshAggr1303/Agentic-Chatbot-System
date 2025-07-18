@@ -65,7 +65,6 @@ export class SupabaseService {
         .from('chats')
         .insert({
           user_id: user_id,
-          context: ''
         })
         .select('chat_id')
         .single();

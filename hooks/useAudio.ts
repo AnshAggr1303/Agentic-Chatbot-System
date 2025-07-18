@@ -44,11 +44,15 @@ export const useAudio = (isMuted: boolean) => {
     }
   }, [hasUserInteracted, isMuted]);
 
+ // Updated useAudio hook - only changed functions shown
+
   const playAudio = useCallback(async (audioUrl: string) => {
-  if (!audioUrl || isMuted) return;
-    
+    if (!audioUrl || isMuted) return;
+      
     try {
+      console.log('Playing audio:', audioUrl);
       isInitializingRef.current = true;
+      
       // Get the audio element
       const audio = document.getElementById('audio') as HTMLAudioElement;
       if (!audio) {
@@ -57,26 +61,28 @@ export const useAudio = (isMuted: boolean) => {
         return;
       }
 
-      audio.src = audioUrl;
-      audio.loop = isLooped;
-
+      // Reset audio state
       if (!audio.paused) {
         audio.pause();
         audio.currentTime = 0;
       }
+
+      // Set new source
+      audio.src = audioUrl;
+      audio.loop = false; // Always set to false for single playback
+      audio.muted = false; // Ensure not muted
       
       // Create audio context only if it doesn't exist
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       }
 
+      // Resume audio context if suspended
       if (audioContextRef.current?.state === 'suspended') {
         try {
           await audioContextRef.current.resume();
         } catch (error) {
           console.warn('Failed to resume audio context:', error);
-          isInitializingRef.current = false;
-          return;
         }
       }
       
@@ -107,18 +113,22 @@ export const useAudio = (isMuted: boolean) => {
         animationRef.current = requestAnimationFrame(updateAmplitude);
       };
       
-      if (!audio.onplay) {
+      // Set up event listeners (only once)
+      const setupEventListeners = () => {
+        audio.onloadstart = () => console.log('Audio loading started');
+        audio.oncanplay = () => console.log('Audio can play');
         audio.onplay = () => {
+          console.log('Audio started playing');
           setIsPlaying(true);
           setIsMutedState(false);
           updateAmplitude();
-        }
-      
+        };
+        
         audio.onended = () => {
+          console.log('Audio ended');
           setIsPlaying(false);
           setAudioAmplitude(0.9);
-          setIsMutedState(true);
-          setIsLooped(true);
+          setIsMutedState(false); // Keep unmuted for next audio
           if (animationRef.current) {
             cancelAnimationFrame(animationRef.current);
           }
@@ -130,16 +140,20 @@ export const useAudio = (isMuted: boolean) => {
           setAudioAmplitude(0.9);
           isInitializingRef.current = false;
         };
-      }
+      };
 
+      setupEventListeners();
+
+      // Wait for audio to be ready
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Audio ready timeout'));
-        }, 5000);
+        }, 10000); // Increased timeout
         
         const onCanPlay = () => {
+          console.log('Audio ready to play');
           clearTimeout(timeout);
-          audio.removeEventListener('canplay', onCanPlay);
+          audio.removeEventListener('canplaythrough', onCanPlay);
           resolve();
         };
         
@@ -147,25 +161,42 @@ export const useAudio = (isMuted: boolean) => {
           clearTimeout(timeout);
           resolve();
         } else {
-          audio.addEventListener('canplay', onCanPlay);
+          audio.addEventListener('canplaythrough', onCanPlay);
+          audio.load(); // Force load
         }
       });
       
+      // Attempt to play
       try {
-        await audio.play();
-
+        console.log('Attempting to play audio...');
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          await playPromise;
+          console.log('Audio playing successfully');
+        }
       } catch (playError) {
         console.error('Audio play failed:', playError);
+        
+        // Fallback: try to play without waiting
+        try {
+          audio.play();
+        } catch (fallbackError) {
+          console.error('Fallback play also failed:', fallbackError);
+        }
+        
         setIsPlaying(false);
         setAudioAmplitude(0.9);
       }
-    }catch (err) {
-      console.error('Error playing audio:', err);
+      
+      isInitializingRef.current = false;
+    } catch (err) {
+      console.error('Error in playAudio:', err);
       setIsPlaying(false);
       setAudioAmplitude(0.9);
       isInitializingRef.current = false;
     }
-  }, [isMuted, isPlaying]);
+  }, [isMuted]);
 
   return { audioAmplitude, playAudio, isPlaying, isLooped, isMutedState, hasUserInteracted };
 };
