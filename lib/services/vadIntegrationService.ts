@@ -1,4 +1,5 @@
 // lib/services/vadIntegrationService.ts
+import { VADResult } from '../../types/audio';
 import VoiceActivityDetector from './vadService';
 
 export class VADIntegrationService {
@@ -33,13 +34,22 @@ export class VADIntegrationService {
 
       this.audioStream = stream;
       this.vad = new VoiceActivityDetector({
-        energyThreshold: 0.012,
+        energyThreshold: 0.015,
         spectralCentroidThreshold: 1200,
         zcr_threshold: 0.5,
-        minSpeechDuration: 100,
-        maxSilenceDuration: 300,
-        sentenceEndSilence: 2000
+        minSpeechDuration: 300,
+        maxSilenceDuration: 1500,
+        sentenceEndSilence: 4000
       });
+
+      // this.vad = new VoiceActivityDetector({
+      //   energyThreshold: 0.012,
+      //   spectralCentroidThreshold: 1200,
+      //   zcr_threshold: 0.5,
+      //   minSpeechDuration: 100,
+      //   maxSilenceDuration: 300,
+      //   sentenceEndSilence: 2000
+      // });
 
       await this.vad.initialize(stream);
       this.vad.startDetection(this.handleVADResult.bind(this));
