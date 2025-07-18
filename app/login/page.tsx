@@ -21,8 +21,9 @@ const LoginPage = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: process.env.NODE_ENV === 'production' 
-      ? 'https://your-study-buddy.netlify.app/': `${window.location.origin}/`
+          redirectTo: '/'
+          // redirectTo: 'https://your-study-buddy.netlify.app/'
+          // redirectTo: `${window.location.origin}/`
         }
       });
 
