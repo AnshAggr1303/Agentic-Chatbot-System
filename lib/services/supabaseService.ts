@@ -1,6 +1,7 @@
 // lib/services/supabaseService.ts
 import { createClient } from '@supabase/supabase-js';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 // Initialize Supabase client - Replace with your actual Supabase URL and key
 const supabase = createClient(
@@ -37,25 +38,33 @@ interface CreateUserResponse {
 }
 
 export const useAuthRedirect = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     const checkAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error checking auth session:', error);
-          window.location.href = '/login';
+          redirectToLogin();
           return;
         }
 
         if (!session) {
-          window.location.href = '/login';
+          redirectToLogin();
           return;
         }
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          window.location.href = '/login';
+          redirectToLogin();
           return;
         }
 
@@ -70,7 +79,13 @@ export const useAuthRedirect = () => {
 
       } catch (error) {
         console.error('Authentication check failed:', error);
-        window.location.href = '/login';
+        redirectToLogin();
+      }
+    };
+
+    const redirectToLogin = () => {
+      if (typeof window !== 'undefined') {
+        window.location.replace('/login');
       }
     };
 
@@ -80,7 +95,7 @@ export const useAuthRedirect = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
-          window.location.href = '/login';
+          redirectToLogin();
         } else if (event === 'SIGNED_IN' && session?.user) {
           // Create or update user when they sign in
           const supabaseService = SupabaseService.getInstance();
@@ -96,7 +111,7 @@ export const useAuthRedirect = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isMounted]);
 };
 
 export class SupabaseService {
@@ -335,8 +350,6 @@ export class SupabaseService {
       if (!text || text.trim() === '') {
         throw new Error('Text content is required');
       }
-
-      // FIXED: Using correct enum values 'USER' and 'AI' instead of 'USER' and 'ASSISTANT'
       
       const { data: messageData, error: messageError } = await supabase
         .from('chat_messages')
@@ -385,7 +398,7 @@ export class SupabaseService {
 
       // If we have an active chat, add to it; otherwise create new chat
       if (this.currentChatId) {
-        const result = await this.addMessageToChat(this.currentChatId, text, type);
+        const result = await this.addMessageToChat(this.currentChatId, text, "USER", type);
         return {
           success: result.success,
           chat_id: this.currentChatId,

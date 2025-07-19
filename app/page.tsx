@@ -484,7 +484,7 @@ export default function AudioChatPage() {
             }`}>
               
               {/* Messages Area */}
-              <div className="overflow-y-auto flex grow p-6 space-y-4">
+              <div className="overflow-y-auto flex flex-col grow p-6 space-y-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
