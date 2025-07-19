@@ -1,19 +1,20 @@
 "use client"
 
 import { useState, useEffect, useRef, Ref } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut, X, AudioLines, Moon, Sun } from 'lucide-react';
+import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut, X, AudioLines, Moon, Sun, AlertCircle } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
 import SupabaseService, { useAuthRedirect } from '../lib/services/supabaseService';
 import { Application } from '@splinetool/runtime';
+import ReactMarkdown from 'react-markdown';
 
 interface Message{
     id: string,
     type: string,
     content: string,
-    timestamp: Date
+    timestamp: Date,
 }
 
 export default function AudioChatPage() {
@@ -81,6 +82,76 @@ export default function AudioChatPage() {
     }
   }, [isDarkMode]);
 
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
+  const [showRetryButton, setShowRetryButton] = useState(false);
+
+  const sendMessageWithRetry = async (messageText: string, isRetry = false): Promise<boolean> => {
+    try {
+      console.log('Attempting to send message:', messageText);
+      
+      // Save to Supabase using the same method as speech
+      const supabaseService = SupabaseService.getInstance();
+      const result = await supabaseService.sendText(messageText, 'text');
+      
+      console.log('Supabase result:', result);
+
+      if (result.chat_id && result.message_id) {
+        // Update current chat ID if it changed
+        if (result.chat_id !== currentChatId) {
+          setCurrentChatId(result.chat_id);
+        }
+
+        // Wait for AI response with shorter timeout
+        const messages = await supabaseService.waitForAIResponse(
+          result.chat_id, 
+          result.message_id,
+          30000 // 15 second timeout
+        );
+        
+        if (messages.messages && messages.messages.length > 0) {
+          const aiResponse = messages.messages[0];
+          const botMessage = {
+            id: (Date.now() + 1).toLocaleString(),
+            type: 'bot',
+            content: aiResponse.text,
+            timestamp: new Date(aiResponse.created_at)
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+          setRetryMessage(null); // Clear retry state on success
+          setShowRetryButton(false);
+          return true;
+        } else {
+          throw new Error('No AI response received');
+        }
+      } else {
+        throw new Error(result.error || 'Failed to save user message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // If this is not a retry, try once more
+      if (!isRetry) {
+        console.log('Retrying message send...');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+        return await sendMessageWithRetry(messageText, true);
+      }
+      
+      // If retry also failed, show error and set up retry button
+      const errorMessage = {
+        id: (Date.now() + 1).toLocaleString(),
+        type: 'bot',
+        content: 'Failed to send message. Connection error occurred.',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      setRetryMessage(messageText); // Store message for retry button
+      setShowRetryButton(true);
+      return false;
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -97,53 +168,29 @@ export default function AudioChatPage() {
     setIsTyping(true);
     setIsWaitingForResponse(true);
 
-    try {
-      // Save to Supabase using the same method as speech
-      const supabaseService = SupabaseService.getInstance();
-      const result = await supabaseService.sendText(messageText, 'text');
+    const success = await sendMessageWithRetry(messageText);
+    
+    setIsTyping(false);
+    setIsWaitingForResponse(false);
+  };
 
-      if (result.success && result.chat_id && result.message_id) {
-        // Update current chat ID if it changed
-        if (result.chat_id !== currentChatId) {
-          setCurrentChatId(result.chat_id);
-        }
-
-        // Listen for AI response
-        const messages = await supabaseService.listenToChatMessagesAfter(result.chat_id, result.message_id);
-        
-        if (messages.success && messages.messages && messages.messages.length > 0) {
-          const aiResponse = messages.messages[0];
-          const botMessage = {
-            id: (Date.now() + 1).toLocaleString(),
-            type: 'bot',
-            content: aiResponse.text,
-            timestamp: new Date(aiResponse.created_at)
-          };
-
-          setMessages(prev => [...prev, botMessage]);
-        }
-      } else {
-        // Fallback error message
-        const errorMessage = {
-          id: (Date.now() + 1).toLocaleString(),
-          type: 'bot',
-          content: 'Sorry, I encountered an error processing your message.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage = {
-        id: (Date.now() + 1).toLocaleString(),
-        type: 'bot',
-        content: 'Sorry, I encountered an error processing your message.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-      setIsWaitingForResponse(false);
+  const handleRetryMessage = async () => {
+    if (!retryMessage) return;
+    
+    setShowRetryButton(false);
+    setIsTyping(true);
+    setIsWaitingForResponse(true);
+    
+    // Remove the last error message before retrying
+    setMessages(prev => prev.slice(0, -1));
+    
+    const success = await sendMessageWithRetry(retryMessage);
+    
+    setIsTyping(false);
+    setIsWaitingForResponse(false);
+    
+    if (success) {
+      setRetryMessage(null);
     }
   };
 
@@ -505,14 +552,19 @@ export default function AudioChatPage() {
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                         message.type === 'user'
                           ? isDarkMode
-                            ? 'bg-indigo-900 text-gray-200'
+                            ? 'bg-blue-900 text-gray-200'
                             : 'bg-indigo-100 text-gray-700'
                           : isDarkMode
                             ? 'bg-transparent text-gray-300'
                             : 'bg-transparent text-gray-700'
                       }`}
                     >
-                      <p className="text-sm font-normal leading-relaxed">{message.content}</p>
+                      {/* <p className='prose text-sm font-normal leading-relaxed'> */}
+                        <ReactMarkdown>
+                          {message.content}
+                        </ReactMarkdown>
+                      {/* </p> */}
+                      {/* <p className="text-sm font-normal leading-relaxed">{message.content}</p> */}
                     </div>
                     {message.type === 'user' && (
                       <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -525,6 +577,37 @@ export default function AudioChatPage() {
                     )}
                   </div>
                 ))}
+                
+                {/* Retry Button - shows after the last message if there's an error */}
+                {showRetryButton && retryMessage && (
+                  <div className="flex justify-start">
+                    <div className="ml-11">
+                      <button
+                        onClick={handleRetryMessage}
+                        disabled={isTyping || isWaitingForResponse}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                          isDarkMode 
+                            ? 'bg-red-800 hover:bg-red-700 disabled:bg-red-900 disabled:opacity-50 text-red-200' 
+                            : 'bg-red-100 hover:bg-red-200 disabled:bg-red-50 disabled:opacity-50 text-red-700'
+                        }`}
+                      >
+                        {isTyping || isWaitingForResponse ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                            Retrying...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Retry Message
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Typing indicator */}
                 {(isTyping || isWaitingForResponse) && (
@@ -558,7 +641,7 @@ export default function AudioChatPage() {
               </div>
               
               {/* Input Area */}
-              <div className={`border-t px-4 pb-2 pt-4 min-h-fit  transition-colors duration-300 ${
+              <div className={`border-t px-4 pb-2 pt-4 min-h-fit transition-colors duration-300 ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700' 
                   : 'bg-white border-gray-200'

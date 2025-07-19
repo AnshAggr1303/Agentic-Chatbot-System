@@ -419,13 +419,6 @@ export class SupabaseService {
   }
 
   /**
-   * Add AI response to chat
-   */
-  async addAIResponse(chatId: string, response: string): Promise<CreateMessageResponse> {
-    return await this.addMessageToChat(chatId, response, 'AI');
-  }
-
-  /**
    * Get current chat ID
    */
   getCurrentChatId(): string | null {
@@ -477,90 +470,172 @@ export class SupabaseService {
    * Get messages from a chat with chat id
    */
   async listenToChatMessagesAfter(chatId: string, message_id: string): Promise<GetMessagesResponse> {
-  try {
-    // Get the timestamp of the reference message
-    console.log(message_id);
-    const { data: refMessage, error: refError } = await supabase
-      .from('chat_messages')
-      .select('created_at')
-      .eq('message_id', message_id)
-      .eq('chat_id', chatId)
-      .maybeSingle();
+    try {
+      // Get the timestamp of the reference message
+      console.log(message_id);
+      const { data: refMessage, error: refError } = await supabase
+        .from('chat_messages')
+        .select('created_at')
+        .eq('message_id', message_id)
+        .eq('chat_id', chatId)
+        .maybeSingle();
 
-    if (refError) {
-      console.error('SupabaseServiceError fetching reference message:', refError);
-      return { success: false, error: refError.message };
-    }
+      if (refError) {
+        console.error('SupabaseServiceError fetching reference message:', refError);
+        return { success: false, error: refError.message };
+      }
 
-    if(!refMessage){
-      console.log("No messsages found with the message id")
-      return {
-        "success": false,
-        "error": "No message found with the message id",
-        "messages": []
+      if(!refMessage){
+        console.log("No messsages found with the message id")
+        return {
+          "success": false,
+          "error": "No message found with the message id",
+          "messages": []
+        };
+      }
+
+      const referenceTimestamp = refMessage.created_at;
+
+      // First, get any existing messages after the reference message
+      const { data: existingMessages, error: existingError } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .gt('created_at', referenceTimestamp)
+        .order('created_at', { ascending: true });
+
+      if (existingError) {
+        console.error('SupabaseServiceError fetching existing messages:', existingError);
+        return { success: false, error: existingError.message };
+      }
+
+      // If there are already messages, return them immediately
+      if (existingMessages && existingMessages.length > 0) {
+        return { success: true, messages: existingMessages };
+      }
+
+      // Set up real-time subscription to listen for new messages
+      return new Promise((resolve) => {
+        const subscription = supabase
+          .channel(`chat_messages_${chatId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'chat_messages',
+              filter: `chat_id=eq.${chatId}`
+            },
+            (payload) => {
+              const newMessage = payload.new as any;
+              
+              // Check if the new message is after our reference timestamp
+              if (newMessage.created_at > referenceTimestamp) {
+                // Unsubscribe and return the new message
+                subscription.unsubscribe();
+                resolve({ success: true, messages: [newMessage] });
+              }
+            }
+          )
+          .subscribe();
+
+        // Optional: Add a timeout to prevent infinite waiting
+        setTimeout(() => {
+          subscription.unsubscribe();
+          resolve({ success: false, error: 'Timeout waiting for new messages' });
+        }, 60000); // 60 second timeout
+      });
+
+    } catch (error) {
+      console.error('SupabaseServiceException fetching messages:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
     }
-
-    const referenceTimestamp = refMessage.created_at;
-
-    // First, get any existing messages after the reference message
-    const { data: existingMessages, error: existingError } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('chat_id', chatId)
-      .gt('created_at', referenceTimestamp)
-      .order('created_at', { ascending: true });
-
-    if (existingError) {
-      console.error('SupabaseServiceError fetching existing messages:', existingError);
-      return { success: false, error: existingError.message };
-    }
-
-    // If there are already messages, return them immediately
-    if (existingMessages && existingMessages.length > 0) {
-      return { success: true, messages: existingMessages };
-    }
-
-    // Set up real-time subscription to listen for new messages
-    return new Promise((resolve) => {
-      const subscription = supabase
-        .channel(`chat_messages_${chatId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: `chat_id=eq.${chatId}`
-          },
-          (payload) => {
-            const newMessage = payload.new as any;
-            
-            // Check if the new message is after our reference timestamp
-            if (newMessage.created_at > referenceTimestamp) {
-              // Unsubscribe and return the new message
-              subscription.unsubscribe();
-              resolve({ success: true, messages: [newMessage] });
-            }
-          }
-        )
-        .subscribe();
-
-      // Optional: Add a timeout to prevent infinite waiting
-      setTimeout(() => {
-        subscription.unsubscribe();
-        resolve({ success: false, error: 'Timeout waiting for new messages' });
-      }, 60000); // 60 second timeout
-    });
-
-  } catch (error) {
-    console.error('SupabaseServiceException fetching messages:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    };
   }
-}
+
+  /**
+   * Wait for AI response with fallback options
+   */
+  async waitForAIResponse(chatId: string, userMessageId: string, timeoutMs: number = 30000): Promise<GetMessagesResponse> {
+    try {
+      // Get the timestamp of the user message
+      const { data: refMessage, error: refError } = await supabase
+        .from('chat_messages')
+        .select('created_at')
+        .eq('message_id', userMessageId)
+        .eq('chat_id', chatId)
+        .maybeSingle();
+
+      if (refError || !refMessage) {
+        return { success: false, error: 'Reference message not found' };
+      }
+
+      console.log("message found" + refMessage.created_at);
+
+      const referenceTimestamp = refMessage.created_at;
+
+      // Check for existing AI messages after user message
+      const { data: existingMessages, error: existingError } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .eq('role', 'AI')
+        .gt('created_at', referenceTimestamp)
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+      if (existingError) {
+        return { success: false, error: existingError.message };
+      }
+
+      if (existingMessages && existingMessages.length > 0) {
+        return { success: true, messages: existingMessages };
+      }
+
+      // Set up real-time subscription with shorter timeout
+      return new Promise((resolve) => {
+        const subscription = supabase
+          .channel(`ai_response_${chatId}_${userMessageId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'chat_messages',
+              filter: `chat_id=eq.${chatId}`
+            },
+            (payload) => {
+              const newMessage = payload.new as any;
+              
+              if (newMessage.role === 'AI' && newMessage.created_at > referenceTimestamp) {
+                subscription.unsubscribe();
+                resolve({ success: true, messages: [newMessage] });
+              }
+            }
+          )
+          .subscribe();
+
+        // Shorter timeout
+        setTimeout(() => {
+          subscription.unsubscribe();
+          resolve({ 
+            success: false, 
+            error: 'Timeout waiting for AI response',
+            messages: []
+          });
+        }, timeoutMs);
+      });
+
+    } catch (error) {
+      console.error('Error waiting for AI response:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
+  }
 
   /**
    * Get chat metadata
