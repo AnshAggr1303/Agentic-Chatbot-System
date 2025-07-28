@@ -540,10 +540,10 @@ export default function AudioChatPage() {
                     }`}
                   >
                     {message.type === 'bot' && (
-                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
                         isDarkMode 
-                          ? 'bg-green-900 border-gray-600 shadow-green-700/5' 
-                          : 'bg-green-50 border-gray-200 shadow-green-700/5'
+                          ? 'bg-green-900 shadow-green-700/5' 
+                          : 'bg-green-50 border border-green-200 shadow-green-700/5'
                       }`}>
                         <Bot className="h-4 w-4 text-green-600" />
                       </div>
@@ -556,21 +556,19 @@ export default function AudioChatPage() {
                             : 'bg-indigo-100 text-gray-700'
                           : isDarkMode
                             ? 'bg-transparent text-gray-300'
-                            : 'bg-transparent text-gray-700'
+                            : 'bg-transparent text-gray-700/90'
                       }`}
                     >
-                      {/* <p className='prose text-sm font-normal leading-relaxed'> */}
-                        <ReactMarkdown>
-                          {message.content}
-                        </ReactMarkdown>
-                      {/* </p> */}
+                      <ReactMarkdown>
+                        {message.content}
+                      </ReactMarkdown>
                       {/* <p className="text-sm font-normal leading-relaxed">{message.content}</p> */}
                     </div>
                     {message.type === 'user' && (
-                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 ${
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                         isDarkMode 
-                          ? 'bg-blue-900 border-gray-600' 
-                          : 'bg-blue-50 border-gray-300'
+                          ? 'bg-blue-900' 
+                          : 'bg-blue-50 border border-blue-100'
                       }`}>
                         <User className="h-4 w-4 text-blue-600" />
                       </div>

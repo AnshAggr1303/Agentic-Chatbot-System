@@ -18,12 +18,14 @@ const LoginPage = () => {
       setIsLoading(true);
       setError('');
 
+      const redirectTo = window.location.origin + "/";
+      console.log(redirectTo);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // redirectTo: '/'
-          redirectTo: 'https://your-study-buddy.netlify.app/'
-          // redirectTo: `${window.location.origin}/`
+          redirectTo: "/",
+          // redirectTo: redirectTo,
         }
       });
 
