@@ -9,6 +9,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+export interface UserDetails{
+  user_id: string,
+  email: string,
+  google_id: string,
+  name: string,
+  profile_picture: string | null,
+}
+
 interface CreateChatAndMessageResponse {
   success: boolean;
   chat_id?: string;
@@ -262,7 +270,7 @@ export class SupabaseService {
   /**
    * Get user from database
    */
-  async getUser(userId: string) {
+  async getUser(userId: string) : Promise<UserDetails | null> {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -272,17 +280,41 @@ export class SupabaseService {
 
       if (error) {
         console.error('Error fetching user:', error);
-        return { success: false, error: error.message };
+        return null;
       }
 
-      return { success: true, user: data };
+      return null;
       
     } catch (error) {
       console.error('Exception fetching user:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
+      return null;
+    }
+  }
+
+  /**
+   * Get user from database
+   */
+  async getCurrentUser() : Promise<UserDetails | null> {
+    try {
+      const user = (await supabase.auth.getUser());
+      const userId = user.data.user?.id;
+      console.log(user);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user:', error);
+        return null;
+      }
+
+      return null;
+      
+    } catch (error) {
+      console.error('Exception fetching user:', error);
+      return null;
     }
   }
 

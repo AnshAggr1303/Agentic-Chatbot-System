@@ -6,7 +6,7 @@ import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
 import "../app/globals.css";
-import SupabaseService, { useAuthRedirect } from '../lib/services/supabaseService';
+import SupabaseService, { useAuthRedirect, UserDetails } from '../lib/services/supabaseService';
 import { Application } from '@splinetool/runtime';
 import ReactMarkdown from 'react-markdown';
 
@@ -31,10 +31,19 @@ export default function AudioChatPage() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef: Ref<HTMLDivElement | null> = useRef(null);
+  const [user, setUser] = useState<UserDetails | null>(null);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+
+  const getUser = async () => {
+    setUser(await SupabaseService.getInstance().getCurrentUser());
+  };
+
+  useEffect( () => {
+    getUser();
+  });
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -61,7 +70,7 @@ export default function AudioChatPage() {
     currentResponseText,
   } = useSpeech();
 
-  useAuthRedirect();
+  // useAuthRedirect();
 
   const { playAudio, hasUserInteracted } = useAudio(isMuted);
 
@@ -522,169 +531,181 @@ export default function AudioChatPage() {
 
         {/* Text Mode */}
         {!isAudioMode && (
-          <div className="h-[calc(100vh-12rem)] mx-auto">
-            {/* Chat Container */}
-            <div className={`border flex flex-col h-full rounded-3xl overflow-hidden shadow-lg transition-colors duration-300 ${
-              isDarkMode 
-                ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
-                : 'bg-gray-50 border-gray-200 shadow-gray-50/20'
-            }`}>
-              
-              {/* Messages Area */}
-              <div className="overflow-y-auto flex flex-col grow p-6 space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      message.type === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    {message.type === 'bot' && (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+          <div className="h-[calc(100vh-12rem)] mx-auto flex flex-col">
+            {/* Messages Area */}
+            <div className="overflow-y-auto flex flex-col grow p-6 space-y-4">
+              {messages.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <h1 className={`text-4xl font-bold mb-2 ${
+                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      {user != null? `Welcome, ${user.name}`:
+                      "Welcome back"}
+                    </h1>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.type === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.type === 'bot' && (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
+                          isDarkMode 
+                            ? 'bg-green-900 shadow-green-700/5' 
+                            : 'bg-green-50 border border-green-200 shadow-green-700/5'
+                        }`}>
+                          <Bot className="h-4 w-4 text-green-600" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                          message.type === 'user'
+                            ? isDarkMode
+                              ? 'bg-blue-900 text-gray-200'
+                              : 'bg-indigo-100 text-gray-700'
+                            : isDarkMode
+                              ? 'bg-transparent text-gray-300'
+                              : 'bg-transparent text-gray-700/90'
+                        }`}
+                      >
+                        <p className="text-sm font-normal leading-relaxed">{message.content}</p>
+                      </div>
+                      {message.type === 'user' && (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isDarkMode 
+                            ? 'bg-blue-900' 
+                            : 'bg-blue-50 border border-blue-100'
+                        }`}>
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Retry Button */}
+                  {showRetryButton && retryMessage && (
+                    <div className="flex justify-start">
+                      <div className="ml-11">
+                        <button
+                          onClick={handleRetryMessage}
+                          disabled={isTyping || isWaitingForResponse}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                            isDarkMode 
+                              ? 'bg-red-800 hover:bg-red-700 disabled:bg-red-900 disabled:opacity-50 text-red-200' 
+                              : 'bg-red-100 hover:bg-red-200 disabled:bg-red-50 disabled:opacity-50 text-red-700'
+                          }`}
+                        >
+                          {isTyping || isWaitingForResponse ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                              Retrying...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              Retry Message
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Typing indicator */}
+                  {(isTyping || isWaitingForResponse) && (
+                    <div className="flex gap-3 justify-start">
+                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
                         isDarkMode 
-                          ? 'bg-green-900 shadow-green-700/5' 
-                          : 'bg-green-50 border border-green-200 shadow-green-700/5'
+                          ? 'bg-green-900 border-gray-600 shadow-green-700/10' 
+                          : 'bg-green-100 border-gray-300 shadow-green-700/10'
                       }`}>
                         <Bot className="h-4 w-4 text-green-600" />
                       </div>
-                    )}
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                        message.type === 'user'
-                          ? isDarkMode
-                            ? 'bg-blue-900 text-gray-200'
-                            : 'bg-indigo-100 text-gray-700'
-                          : isDarkMode
-                            ? 'bg-transparent text-gray-300'
-                            : 'bg-transparent text-gray-700/90'
-                      }`}
-                    >
-                      <ReactMarkdown>
-                        {message.content}
-                      </ReactMarkdown>
-                      {/* <p className="text-sm font-normal leading-relaxed">{message.content}</p> */}
-                    </div>
-                    {message.type === 'user' && (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isDarkMode 
-                          ? 'bg-blue-900' 
-                          : 'bg-blue-50 border border-blue-100'
+                      <div className={`px-4 py-2 rounded-2xl max-w-xs ${
+                        isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
                       }`}>
-                        <User className="h-4 w-4 text-blue-600" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {/* Retry Button - shows after the last message if there's an error */}
-                {showRetryButton && retryMessage && (
-                  <div className="flex justify-start">
-                    <div className="ml-11">
-                      <button
-                        onClick={handleRetryMessage}
-                        disabled={isTyping || isWaitingForResponse}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                          isDarkMode 
-                            ? 'bg-red-800 hover:bg-red-700 disabled:bg-red-900 disabled:opacity-50 text-red-200' 
-                            : 'bg-red-100 hover:bg-red-200 disabled:bg-red-50 disabled:opacity-50 text-red-700'
-                        }`}
-                      >
-                        {isTyping || isWaitingForResponse ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                            Retrying...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Retry Message
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Typing indicator */}
-                {(isTyping || isWaitingForResponse) && (
-                  <div className="flex gap-3 justify-start">
-                    <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
-                      isDarkMode 
-                        ? 'bg-green-900 border-gray-600 shadow-green-700/10' 
-                        : 'bg-green-100 border-gray-300 shadow-green-700/10'
-                    }`}>
-                      <Bot className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className={`px-4 py-2 rounded-2xl max-w-xs ${
-                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
-                    }`}>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full animate-pulse ${
-                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
-                        }`}></div>
-                        <div className={`w-2 h-2 rounded-full animate-pulse delay-150 ${
-                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
-                        }`}></div>
-                        <div className={`w-2 h-2 rounded-full animate-pulse delay-300 ${
-                          isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
-                        }`}></div>
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full animate-pulse ${
+                            isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                          }`}></div>
+                          <div className={`w-2 h-2 rounded-full animate-pulse delay-150 ${
+                            isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                          }`}></div>
+                          <div className={`w-2 h-2 rounded-full animate-pulse delay-300 ${
+                            isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                          }`}></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
+                  )}
+                </>
+              )}
               
-              {/* Input Area */}
-              <div className={`border-t px-4 pb-2 pt-4 min-h-fit transition-colors duration-300 ${
-                isDarkMode 
-                  ? 'bg-gray-800 border-gray-700' 
-                  : 'bg-white border-gray-200'
-              }`}>
-                <div className="flex gap-3 items-center">
-                  <div className="flex-1">
-                    <textarea
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      className={`w-full resize-none border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
-                        isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
-                          : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:ring-gray-900'
-                      }`}
-                      rows={1}
-                      style={{ minHeight: '44px', maxHeight: '120px' }}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
-                    title="Send message"
-                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+              <div ref={messagesEndRef} />
+            </div>
+            
+            {/* Input Area - Animated to bottom */}
+            <div className={`px-4 pb-2 pt-4 min-h-fit transition-all duration-500 ease-in-out ${
+              messages.length > 0 ? 'transform translate-y-0' : 'transform -translate-y-4'
+            }`}>
+              <div className="flex gap-3 items-center">
+                <div className="flex-1">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    className={`w-full resize-none rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
                       isDarkMode 
-                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
-                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                        ? 'bg-gray-700 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
+                        : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-gray-900'
                     }`}
-                  >
-                    <Send className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => setIsAudioMode(true)}
-                    title="Switch to audio mode"
-                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-                      isDarkMode 
-                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
-                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
-                    }`}
-                  >
-                    <AudioLines className="h-5 w-5" />
-                  </button>
+                    rows={1}
+                    style={{ minHeight: '44px', maxHeight: '120px' }}
+                  />
                 </div>
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
+                  title="Send message"
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
+                      : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                  }`}
+                >
+                  <Send className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setIsAudioMode(true)}
+                  title="Switch to audio mode"
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                    isDarkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
+                      : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                  }`}
+                >
+                  <AudioLines className="h-5 w-5" />
+                </button>
               </div>
+            </div>
+            
+            {/* Dark mode toggle for demo */}
+            <div className="fixed top-4 right-4">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-sm"
+              >
+                Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
+              </button>
             </div>
           </div>
         )}
