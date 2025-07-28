@@ -403,7 +403,9 @@ export default function AudioChatPage() {
                             <p className={`leading-relaxed ${
                               isDarkMode ? 'text-gray-300' : 'text-gray-600'
                             }`}>
-                              {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
+                              <ReactMarkdown>
+                                {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
+                              </ReactMarkdown>
                             </p>
                           </div>
                         </div>
