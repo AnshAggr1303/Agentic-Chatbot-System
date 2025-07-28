@@ -5,8 +5,8 @@ import { useRouter } from 'next/router';
 
 // Initialize Supabase client - Replace with your actual Supabase URL and key
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export interface UserDetails{
