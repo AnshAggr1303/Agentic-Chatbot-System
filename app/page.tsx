@@ -9,6 +9,7 @@ import "../app/globals.css";
 import SupabaseService, { useAuthRedirect, UserDetails } from '../lib/services/supabaseService';
 import { Application } from '@splinetool/runtime';
 import ReactMarkdown from 'react-markdown';
+import { timeStamp } from 'console';
 
 interface Message{
     id: string,
@@ -43,7 +44,7 @@ export default function AudioChatPage() {
 
   useEffect( () => {
     getUser();
-  });
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -161,7 +162,30 @@ export default function AudioChatPage() {
     }
   };
 
+  const handleSuggestedMessage = async (suggestion) => {
+    if (!suggestion.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toLocaleString(),
+      type: 'user',
+      content: suggestion.trim(),
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const messageText = suggestion.trim();
+    setInputValue('');
+    setIsTyping(true);
+    setIsWaitingForResponse(true);
+
+    const success = await sendMessageWithRetry(messageText);
+    
+    setIsTyping(false);
+    setIsWaitingForResponse(false);
+  };
+
   const handleSendMessage = async () => {
+
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
@@ -533,16 +557,84 @@ export default function AudioChatPage() {
         {!isAudioMode && (
           <div className="h-[calc(100vh-12rem)] mx-auto flex flex-col">
             {/* Messages Area */}
-            <div className="overflow-y-auto flex flex-col grow p-6 space-y-4">
+            <div className={`overflow-y-auto flex flex-col p-6 space-y-4 ${
+              messages.length === 0 ? '' : 'grow'
+            }`}>
               {messages.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className={`text-4xl font-bold mb-2 ${
+                <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                  <div className="text-center w-full max-w-2xl">
+                    <h1 className={`text-4xl font-bold mb-8 mt-64 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {user != null? `Welcome, ${user.name}`:
-                      "Welcome back"}
+                      {user != null? `Welcome, ${user.name}` : "Welcome back"}
                     </h1>
+                    
+                    {/* Centered Input Area for empty state */}
+                    <div className="mb-6">
+                      <div className="flex gap-3 items-center">
+                        <div className="flex-1">
+                          <textarea
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Type your message..."
+                            className={`w-full resize-none rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
+                              isDarkMode 
+                                ? 'bg-gray-700 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
+                                : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-gray-900 border border-gray-200'
+                            }`}
+                            rows={1}
+                            style={{ minHeight: '44px', maxHeight: '120px' }}
+                          />
+                        </div>
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
+                          title="Send message"
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                            isDarkMode 
+                              ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
+                              : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                          }`}
+                        >
+                          <Send className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => setIsAudioMode(true)}
+                          title="Switch to audio mode"
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                            isDarkMode 
+                              ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
+                              : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                          }`}
+                        >
+                          <AudioLines className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Suggested Messages for empty state */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto">
+                      {[
+                        "What can you help me with?",
+                        "Tell me a interesting fact",
+                        "Help me brainstorm ideas",
+                        "Explain something complex"
+                      ].map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestedMessage(suggestion)}
+                          disabled={isTyping || isWaitingForResponse}
+                          className={`p-3 rounded-xl text-sm transition-colors text-left ${
+                            isDarkMode 
+                              ? 'bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:opacity-50 text-gray-300 border border-gray-700' 
+                              : 'bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:opacity-50 text-gray-700 border border-gray-200'
+                          }`}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -652,61 +744,73 @@ export default function AudioChatPage() {
               <div ref={messagesEndRef} />
             </div>
             
-            {/* Input Area - Animated to bottom */}
-            <div className={`px-4 pb-2 pt-4 min-h-fit transition-all duration-500 ease-in-out ${
-              messages.length > 0 ? 'transform translate-y-0' : 'transform -translate-y-4'
-            }`}>
-              <div className="flex gap-3 items-center">
-                <div className="flex-1">
-                  <textarea
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
-                    className={`w-full resize-none rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
+            {/* Input Area - Only shown when messages exist */}
+            {messages.length > 0 && (
+              <div className="px-4 pb-2 pt-4 min-h-fit">
+                <div className="flex gap-3 items-center mb-4">
+                  <div className="flex-1">
+                    <textarea
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className={`w-full resize-none rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors duration-200 ${
+                        isDarkMode 
+                          ? 'bg-gray-700 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
+                          : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-gray-900'
+                      }`}
+                      rows={1}
+                      style={{ minHeight: '44px', maxHeight: '120px' }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
+                    title="Send message"
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
                       isDarkMode 
-                        ? 'bg-gray-700 text-gray-100 placeholder-gray-400 focus:ring-gray-500' 
-                        : 'bg-white text-gray-900 placeholder-gray-500 focus:ring-gray-900'
+                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
+                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
                     }`}
-                    rows={1}
-                    style={{ minHeight: '44px', maxHeight: '120px' }}
-                  />
+                  >
+                    <Send className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsAudioMode(true)}
+                    title="Switch to audio mode"
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                      isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
+                        : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
+                    }`}
+                  >
+                    <AudioLines className="h-5 w-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isTyping || isWaitingForResponse}
-                  title="Send message"
-                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-400 text-white' 
-                      : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
-                  }`}
-                >
-                  <Send className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setIsAudioMode(true)}
-                  title="Switch to audio mode"
-                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white' 
-                      : 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white'
-                  }`}
-                >
-                  <AudioLines className="h-5 w-5" />
-                </button>
+                
+                {/* Suggested Messages for conversation state */}
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {[
+                    "Continue this topic",
+                    "Ask a follow-up question",
+                    "Change subject"
+                  ].map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestedMessage(suggestion)}
+                      disabled={isTyping || isWaitingForResponse}
+                      className={`px-3 py-2 rounded-lg text-xs transition-colors ${
+                        isDarkMode 
+                          ? 'bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:opacity-50 text-gray-400 border border-gray-700' 
+                          : 'bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:opacity-50 text-gray-600 border border-gray-200'
+                      }`}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            
-            {/* Dark mode toggle for demo */}
-            <div className="fixed top-4 right-4">
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-sm"
-              >
-                Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
-              </button>
-            </div>
+            )}
           </div>
         )}
 

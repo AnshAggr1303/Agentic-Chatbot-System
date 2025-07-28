@@ -303,10 +303,15 @@ export class SupabaseService {
         .from('users')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user:', error);
+        return null;
+      }
+
+      if(!data){
+        console.log('No user data found');
         return null;
       }
 
