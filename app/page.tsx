@@ -334,7 +334,7 @@ export default function AudioChatPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className={`text-4xl font-medium ${
+            <h1 className={`text-4xl font-medium tracking-tight ${
               isDarkMode ? 'text-gray-100' : 'text-gray-900'
             }`}>
               Study Buddy
