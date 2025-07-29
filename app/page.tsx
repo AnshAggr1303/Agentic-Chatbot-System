@@ -311,7 +311,7 @@ export default function AudioChatPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
+    <div className={`min-h-screen max-h-screen transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-gray-900 text-gray-100' 
         : 'bg-[#f4f4f9] text-gray-900'
@@ -330,9 +330,9 @@ export default function AudioChatPage() {
         onError={(e) => console.error('Audio element error:', e)}
       />
 
-      <div className="min-h-screen max-w-4xl mx-auto px-6 py-8">
+      <div className="min-h-screen mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center py-8">
           <div className="flex items-center justify-center gap-4 mb-2">
             <h1 className={`text-4xl font-medium tracking-tight ${
               isDarkMode ? 'text-gray-100' : 'text-gray-900'
@@ -557,9 +557,9 @@ export default function AudioChatPage() {
 
         {/* Text Mode */}
         {!isAudioMode && (
-          <div className="h-[calc(100vh-12rem)] mx-auto flex flex-col">
+          <div className="h-[calc(100vh-9rem)] w-full mx-auto flex flex-col">
             {/* Messages Area */}
-            <div className={`overflow-y-auto flex flex-col p-6 space-y-4 ${
+            <div className={`overflow-y-auto w-full flex flex-col py-6 md:px-16 lg:px-24 xl:px-32 space-y-4 ${
               messages.length === 0 ? '' : 'grow'
             }`}>
               {messages.length === 0 ? (
@@ -618,16 +618,18 @@ export default function AudioChatPage() {
                     {/* Suggested Messages for empty state */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto">
                       {[
-                        "What can you help me with?",
-                        "Tell me a interesting fact",
-                        "Help me brainstorm ideas",
-                        "Explain something complex"
+                        // "What can you help me with?",
+                        "Can you explain Newton's Laws of Motion in simpler terms?",
+                        "Give me some practice questions on World War II history.",
+                        "What are the most important formulas I need to know for calculating derivatives?",
+                        "What are some effective strategies for memorizing medical terminology?"
                       ].map((suggestion, index) => (
+                        <div>
                         <button
                           key={index}
                           onClick={() => handleSuggestedMessage(suggestion)}
                           disabled={isTyping || isWaitingForResponse}
-                          className={`p-3 rounded-xl text-sm transition-colors text-left ${
+                          className={`py-3 px-5 rounded-xl text-sm transition-colors text-left ${
                             isDarkMode 
                               ? 'bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:opacity-50 text-gray-300 border border-gray-700' 
                               : 'bg-gray-50 hover:bg-gray-100 disabled:bg-gray-100 disabled:opacity-50 text-gray-700 border border-gray-200'
@@ -635,6 +637,7 @@ export default function AudioChatPage() {
                         >
                           {suggestion}
                         </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -658,17 +661,19 @@ export default function AudioChatPage() {
                         </div>
                       )}
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                        className={`max-w-[calc(min(90%,32rem] flex lg:max-w-md px-4 py-2 rounded-2xl ${
                           message.type === 'user'
                             ? isDarkMode
-                              ? 'bg-blue-900 text-gray-200'
-                              : 'bg-indigo-100 text-gray-700'
+                              ? 'bg-blue-900 text-gray-200 justify-end'
+                              : 'bg-indigo-100 text-gray-700 justify-end'
                             : isDarkMode
-                              ? 'bg-transparent text-gray-300'
-                              : 'bg-transparent text-gray-700/90'
+                              ? 'bg-transparent text-gray-300 justify-start'
+                              : 'bg-transparent text-gray-700/90 justify-start'
                         }`}
                       >
-                        <p className="text-sm font-normal leading-relaxed">{message.content}</p>
+                        <p className="text-sm font-normal leading-relaxed">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </p>
                       </div>
                       {message.type === 'user' && (
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -748,7 +753,7 @@ export default function AudioChatPage() {
             
             {/* Input Area - Only shown when messages exist */}
             {messages.length > 0 && (
-              <div className="px-4 pb-2 pt-4 min-h-fit">
+              <div className="px-4 pb-2 pt-4 min-h-fit w-full max-w-5xl mx-auto">
                 <div className="flex gap-3 items-center mb-4">
                   <div className="flex-1">
                     <textarea
@@ -791,7 +796,7 @@ export default function AudioChatPage() {
                 </div>
                 
                 {/* Suggested Messages for conversation state */}
-                <div className="flex flex-wrap gap-2 justify-center">
+                {/* <div className="flex flex-wrap gap-2 justify-center">
                   {[
                     "Continue this topic",
                     "Ask a follow-up question",
@@ -810,7 +815,7 @@ export default function AudioChatPage() {
                       {suggestion}
                     </button>
                   ))}
-                </div>
+                </div> */}
               </div>
             )}
           </div>
