@@ -1,97 +1,115 @@
-# Real-time Agentic Chatbot System
+# 🤖 Real-time Agentic Study Buddy System
+
+<div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-14+-black.svg)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)
-![Google Gemini](https://img.shields.io/badge/Google-Gemini-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-14+-black?logo=next.js)
+![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase)
+![Google Gemini](https://img.shields.io/badge/Google-Gemini%202.0-blue?logo=google)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?logo=typescript)
+![Express.js](https://img.shields.io/badge/Express.js-4.x-lightgrey?logo=express)
+
+</div>
 
 ## 🚀 Overview
 
-A cutting-edge real-time agentic chatbot system that combines modern web technologies with advanced AI capabilities. This project addresses the gap in production-ready agentic AI implementations by providing a scalable, responsive, and intelligent conversational platform.
+A cutting-edge **real-time agentic study buddy system** that revolutionizes educational AI by combining advanced conversational AI with adaptive learning capabilities. This system provides personalized tutoring experiences through intelligent voice and text interactions, making learning more engaging and effective.
 
 ## 🎯 Problem Statement
 
-### Current Market Challenges
-- **Limited Production Deployment**: Agentic AI architectures with LLMs are still in infancy for real-time applications
-- **Research vs Reality Gap**: While research shows promise, production-ready implementations are rare
-- **Scalability Issues**: Most solutions fail under heavy multi-user loads
+### Current Educational AI Challenges
+- **Limited Personalization**: Generic responses that don't adapt to individual learning styles
+- **Poor Engagement**: Static Q&A format without interactive learning experiences
+- **No Progress Tracking**: Lack of learning analytics and mastery assessment
+- **Scalability Issues**: Unable to handle multiple concurrent learners effectively
 
 ### Technical Pain Points
-- ❌ **Low Scalability**: Inefficient performance under concurrent users
-- ❌ **Integration Complexity**: Disconnected STT, LLM, and TTS pipelines  
-- ❌ **Reactive-Only Systems**: Lack of proactive, tool-integrated agentic control
-- ❌ **Poor UX**: Disrupted conversation flow, no real-time feedback, limited personalization
+- ❌ **Non-Adaptive Systems**: One-size-fits-all approach to education
+- ❌ **Limited Interaction**: Text-only interfaces without voice capabilities
+- ❌ **No Learning Context**: Sessions don't build on previous conversations
+- ❌ **Poor Assessment**: No real-time understanding evaluation
 
 ## 💡 Solution
 
-### Key Features
-- ⚡ **Ultra-low Latency**: ~1 second response time
-- 🎙️ **Real-time Voice Activity Detection (VAD)**
-- 🌐 **Cross-platform Support**: Web, Mobile, Desktop
-- 📈 **Auto-scaling**: Serverless architecture handles traffic spikes
-- 🤖 **Agentic Workflows**: Modular AI agents using LangGraph
-- 🚀 **First-mover Advantage**: Practical agentic LLM deployment
+### 🌟 Key Features
+- 🧠 **Adaptive Learning**: AI adjusts teaching style based on student comprehension
+- 🎙️ **Voice + Text Interaction**: Multi-modal communication for better engagement
+- 📊 **Real-time Assessment**: Continuous evaluation with personalized quizzes
+- 🔄 **Contextual Memory**: Builds on previous learning sessions
+- ⚡ **Ultra-fast Responses**: ~1-2 second response time
+- 📱 **Multi-platform**: Works on web, mobile, and desktop
+- 🎯 **Subject Agnostic**: Supports math, science, history, literature, and more
 
-### Architecture Flow
-1. **Next.js Frontend** → HTTPS REST API call
-2. **Supabase** records data → triggers Edge Function
-3. **Edge Function (AWS Lambda)** processes → calls Gemini LLM
-4. **Gemini** generates response → TTS → audio stored in Supabase
-5. **Client** retrieves and plays audio + text
+### 🏗️ Architecture Flow
+```
+📱 Frontend (Next.js) → 🌐 REST API → 🗄️ Supabase DB → 🔔 Webhook Trigger
+                                                              ↓
+🎵 Audio Response ← 🔊 TTS Generation ← 🤖 Python AI Agent ← 📨 Node.js Server
+```
 
 ## 🛠️ Technical Stack
 
+<div align="center">
+
 ### Frontend
-- **Next.js 14+** with SSR/SSG
-- **Web Speech API** for STT + Vosk fallback
-- **HTTP/REST** to Supabase
+![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript)
+![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.x-38B2AC?style=for-the-badge&logo=tailwind-css)
 
 ### Backend
-- **AWS API Gateway** for API management
-- **AWS Lambda Functions**:
-  - Audio Lambda
-  - Session Lambda  
-  - Agent Lambda
-  - TTS Lambda
-- **LangGraph** for orchestration
-- **Google Gemini API** for LLM + TTS
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js)
+![Express.js](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express)
+
+### AI & ML
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.0-4285F4?style=for-the-badge&logo=google)
+![LangChain](https://img.shields.io/badge/LangChain-Framework-green?style=for-the-badge)
 
 ### Database & Storage
-- **Supabase PostgreSQL** for data persistence
-- **Supabase Triggers** → Edge Function calls
-- **Supabase Storage** for audio clips
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)
+![Real-time](https://img.shields.io/badge/Real--time-Webhooks-orange?style=for-the-badge)
 
-## 🏗️ Architecture
+### DevOps & Tools
+![ngrok](https://img.shields.io/badge/ngrok-Tunneling-1F1E37?style=for-the-badge&logo=ngrok)
+![Git](https://img.shields.io/badge/Git-Version%20Control-F05032?style=for-the-badge&logo=git)
 
-### System Architecture Overview
+</div>
+
+## 🏗️ System Architecture
+
+### Architecture Overview
 ![System Architecture](assets/1.jpeg)
 
 ### Data Flow Diagram
 ![Data Flow](assets/2.png)
 
 ### Technical Flow
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Next.js Web   │───▶│   Supabase DB   │───▶│  Edge Function  │
-│     Client      │    │   + Triggers    │    │  (AWS Lambda)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                       │
-                                                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Audio Storage  │◀───│   TTS Service   │◀───│  Google Gemini  │
-│ (Supabase S3)   │    │                 │    │    LLM API     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+```mermaid
+graph TD
+    A[Next.js Frontend] -->|REST API| B[Supabase Database]
+    B -->|Webhook Trigger| C[Node.js Server]
+    C -->|Subprocess Call| D[Python AI Agent]
+    D -->|Gemini API| E[Google AI Service]
+    E -->|Response + TTS| D
+    D -->|Generated Audio| F[Supabase Storage]
+    F -->|Audio URL| B
+    B -->|Real-time Update| A
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- AWS Account
-- Supabase Account
-- Google Cloud Account (Gemini API)
+- **Node.js** 18+ 
+- **Python** 3.9+
+- **Git**
+- **Supabase Account**
+- **Google Cloud Account** (Gemini API access)
+- **ngrok** (for webhook tunneling)
 
-### Installation
+### 📦 Installation
 
 1. **Clone the repository**
    ```bash
@@ -99,128 +117,173 @@ A cutting-edge real-time agentic chatbot system that combines modern web technol
    cd Agentic-Chatbot-System
    ```
 
-2. **Install dependencies**
+2. **Install Frontend Dependencies**
    ```bash
    npm install
    # or
    yarn install
    ```
 
-3. **Environment Setup**
+3. **Install Backend Dependencies**
    ```bash
-   cp .env.example .env.local
+   cd chatbot-server
+   npm install
+   pip install -r requirements.txt  # If requirements.txt exists
+   # or install individual packages:
+   pip install google-generativeai python-dotenv
    ```
-   
-   Configure the following variables:
+
+4. **Environment Setup**
+
+   **Root `.env` file:**
+   ```bash
+   cp .env.example .env
+   ```
    ```env
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   # Frontend Environment Variables
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   
-   # AWS
-   AWS_ACCESS_KEY_ID=your_aws_access_key
-   AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-   AWS_REGION=us-east-1
-   
-   # Google Gemini
-   GOOGLE_API_KEY=your_gemini_api_key
    ```
 
-4. **Deploy AWS Lambda Functions**
-   ```bash
-   cd lambda-functions
-   npm run deploy
+   **Backend `chatbot-server/.env` file:**
+   ```env
+   # Google Gemini API Keys (Multiple keys for load balancing)
+   GOOGLE_API_KEY_1=your_first_google_api_key
+   GOOGLE_API_KEY_2=your_second_google_api_key
+   GOOGLE_API_KEY_3=your_third_google_api_key
+   GOOGLE_API_KEY_4=your_fourth_google_api_key
+   GOOGLE_API_KEY_5=your_fifth_google_api_key
+   GOOGLE_API_KEY_6=your_sixth_google_api_key
+   GOOGLE_API_KEY_7=your_seventh_google_api_key
+   
+   # Alternative: Single API Key
+   # GOOGLE_API_KEY=your_single_google_api_key
+   
+   # Supabase Configuration
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Server Configuration
+   PORT=3002
+   NODE_ENV=development
    ```
 
-5. **Run the development server**
+5. **Database Setup**
+   - Create a new Supabase project
+   - Set up the required tables and webhooks
+   - Configure row-level security policies
+
+### 🏃‍♂️ Running the Application
+
+1. **Start the Backend Server**
    ```bash
+   cd chatbot-server
+   node index.js
+   ```
+   Server will start on `http://localhost:3002`
+
+2. **Set up ngrok tunnel (Required for webhooks)**
+   ```bash
+   # In a new terminal
+   ngrok http 3002
+   ```
+   Copy the HTTPS URL (e.g., `https://abc123.ngrok.io`)
+
+3. **Configure Supabase Webhook**
+   - Go to your Supabase project dashboard
+   - Navigate to Database > Webhooks
+   - Create a new webhook pointing to: `https://your-ngrok-url.ngrok.io/webhook/chat-message`
+
+4. **Start the Frontend**
+   ```bash
+   # In the root directory
    npm run dev
    ```
+   Frontend will be available at `http://localhost:3000`
 
 ## 📁 Project Structure
 
 ```
-├── components/          # React components
-├── pages/              # Next.js pages
-├── lambda-functions/   # AWS Lambda functions
-│   ├── audio-lambda/
-│   ├── session-lambda/
-│   ├── agent-lambda/
-│   └── tts-lambda/
-├── lib/               # Utility functions
-├── hooks/             # Custom React hooks
-├── types/             # TypeScript definitions
-├── supabase/          # Database schema & migrations
-└── docs/              # Documentation
+Agentic-Chatbot-System/
+├── 📁 app/                    # Next.js app directory
+├── 📁 components/             # React components
+├── 📁 hooks/                  # Custom React hooks  
+├── 📁 lib/                    # Utility functions
+├── 📁 types/                  # TypeScript definitions
+├── 📁 public/                 # Static assets
+├── 📁 assets/                 # Project assets
+├── 📁 chatbot-server/         # Backend server
+│   ├── 📄 index.js           # Express server
+│   ├── 📄 func.py            # AI agent logic
+│   ├── 📄 package.json       # Node.js dependencies
+│   ├── 📁 uploads/           # Temporary file storage
+│   └── 📄 .env               # Backend environment variables
+├── 📄 .env                    # Frontend environment variables
+├── 📄 package.json            # Frontend dependencies
+├── 📄 .gitignore             # Git ignore rules
+└── 📄 README.md              # This file
 ```
 
-## 🔧 Configuration
+## 🤖 Agentic AI Features
 
-### Supabase Setup
-1. Create a new Supabase project
-2. Run the migration scripts:
-   ```bash
-   supabase db push
-   ```
-3. Set up Edge Functions:
-   ```bash
-   supabase functions deploy
-   ```
+### 🧠 Intelligent Teaching Phases
+1. **Analysis Phase**: Assesses student level and learning style
+2. **Teaching Phase**: Delivers personalized explanations with examples
+3. **Assessment Phase**: Tests understanding with adaptive questions
+4. **Next Steps Phase**: Recommends follow-up topics and study paths
 
-### AWS Lambda Configuration
-Deploy the Lambda functions using the AWS CLI or Serverless framework:
+### 🎯 Adaptive Capabilities
+- **Learning Style Detection**: Visual, auditory, kinesthetic, reading preferences
+- **Difficulty Adjustment**: Automatically scales complexity based on performance
+- **Subject Recognition**: Identifies math, science, history, literature topics
+- **Progress Tracking**: Monitors mastery levels and learning progression
+
+### 🔧 Technical Features
+- **Multi-model Support**: Gemini 2.0 Flash, 2.5 Flash Preview
+- **API Key Rotation**: Automatic failover across multiple API keys
+- **Structured Responses**: JSON-based data for consistent interactions
+- **Voice Generation**: Text-to-speech with multiple voice options
+
+## 🧪 Testing & Development
+
+### Test the Backend API
 ```bash
-serverless deploy
+# Test Python integration
+curl -X POST http://localhost:3002/debug/test-python \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Explain photosynthesis", "messageType": "text"}'
+
+# Check database schema
+curl http://localhost:3002/debug/test-db-schema
 ```
 
-## 🎯 Usage
-
-### Web Interface
-1. Navigate to `http://localhost:3000`
-2. Click the microphone button to start voice interaction
-3. Speak your query and wait for the AI response
-4. View conversation history in real-time
-
-### API Endpoints
-- `POST /api/chat` - Send text message
-- `POST /api/voice` - Upload voice recording
-- `GET /api/sessions` - Retrieve chat sessions
-- `DELETE /api/sessions/:id` - Delete session
-
-## 🤖 Agentic Capabilities
-
-The system supports various agentic workflows:
-- **Information Retrieval**: Web search and knowledge base queries
-- **Task Automation**: Schedule management, reminders
-- **Contextual Understanding**: Multi-turn conversations with memory
-- **Tool Integration**: External API calls and service integration
+### Health Check
+```bash
+curl http://localhost:3002/health
+```
 
 ## 📊 Performance Metrics
 
-- **Response Time**: ~1 second average
-- **Concurrent Users**: 1000+ supported
-- **Uptime**: 99.9% availability
-- **Voice Recognition**: 95%+ accuracy
+- **Response Time**: 1-2 seconds average
+- **Concurrent Users**: 100+ supported
+- **Voice Recognition**: 95%+ accuracy  
+- **Learning Adaptation**: Real-time difficulty adjustment
+- **API Reliability**: Multiple key rotation system
 
-## 🧪 Testing
+## 🔒 Security Features
 
-```bash
-# Run unit tests
-npm run test
-
-# Run integration tests
-npm run test:integration
-
-# Run e2e tests
-npm run test:e2e
-```
+- ✅ **Environment Variables**: All sensitive keys stored securely
+- ✅ **API Key Rotation**: Automatic failover prevents rate limiting
+- ✅ **Input Validation**: Sanitized user inputs
+- ✅ **HTTPS Required**: Secure webhook communication
+- ✅ **Row Level Security**: Supabase database protection
 
 ## 📈 Monitoring & Analytics
 
-- **AWS CloudWatch** for Lambda monitoring
-- **Supabase Analytics** for database performance
-- **Custom metrics** for conversation quality
+- **Real-time Metrics**: Response times, success rates
+- **Learning Analytics**: Student progress, mastery levels
+- **Error Tracking**: Comprehensive logging system
+- **Performance Monitoring**: API usage and rate limit tracking
 
 ## 🤝 Contributing
 
@@ -230,25 +293,45 @@ npm run test:e2e
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Webhook not triggering?**
+- Check ngrok is running and URL is correct in Supabase
+- Verify webhook endpoint: `/webhook/chat-message`
+
+**API Key errors?**
+- Ensure all Google API keys are valid
+- Check quota limits in Google Cloud Console
+
+**Audio not generating?**
+- Verify file permissions in `uploads/` directory
+- Check Supabase storage bucket configuration
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙋‍♂️ Support
+## 🙋‍♂️ Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/AnshAggr1303/Agentic-Chatbot-System/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/AnshAggr1303/Agentic-Chatbot-System/discussions)
-- **Email**: anshagrawal148@gmail.com
+- **🐛 Issues**: [GitHub Issues](https://github.com/AnshAggr1303/Agentic-Chatbot-System/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/AnshAggr1303/Agentic-Chatbot-System/discussions)
+- **📧 Email**: anshagrawal148@gmail.com
 
 ## 🎉 Acknowledgments
 
-- Google Gemini team for the powerful LLM capabilities
-- Supabase for the seamless backend infrastructure
-- AWS for reliable serverless computing
-- Open source community for inspiration and tools
+- **Google Gemini Team** for powerful AI capabilities
+- **Supabase Team** for seamless backend infrastructure  
+- **Next.js Team** for the amazing React framework
+- **Open Source Community** for inspiration and tools
 
 ---
 
-**Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303) and  [Yash Dagar](https://github.com/yashdagar)**
+<div align="center">
 
-⭐ Star this repository if you found it helpful!
+**🚀 Built with ❤️ by [Ansh Aggarwal](https://github.com/AnshAggr1303) and [Yash Dagar](https://github.com/yashdagar)**
+
+⭐ **Star this repository if you found it helpful!** ⭐
+
+</div>

@@ -3,11 +3,15 @@ node_modules/
 */node_modules/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 venv/
 env/
+ENV/
 
-# Environment variables
+# Environment variables (CRITICAL - contains API keys)
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
@@ -16,21 +20,57 @@ env/
 # Build outputs
 dist/
 build/
+out/
 *.log
 logs/
 
-#Next
+# Next.js
 .next/
+.vercel/
 
-# IDE
+# Uploads and runtime files
+uploads/
+chatbot-server/uploads/
+temp_audio/
+
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-
-# Audio files
+# Audio files (generated at runtime)
 *.wav
 *.mp3
 *.m4a
-temp_audio/
+*.ogg
+*.flac
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Python virtual environments
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# Coverage
+coverage/
+.nyc_output
