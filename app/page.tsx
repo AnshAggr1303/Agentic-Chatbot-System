@@ -624,7 +624,7 @@ export default function AudioChatPage() {
                         "What are the most important formulas I need to know for calculating derivatives?",
                         "What are some effective strategies for memorizing medical terminology?"
                       ].map((suggestion, index) => (
-                        <div>
+                        <div key={suggestion}>
                         <button
                           key={index}
                           onClick={() => handleSuggestedMessage(suggestion)}
