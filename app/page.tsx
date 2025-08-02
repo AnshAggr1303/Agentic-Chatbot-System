@@ -349,7 +349,7 @@ export default function AudioChatPage() {
         {/* Audio Mode - Original Implementation */}
         {isAudioMode && (
           <div className="flex flex-col lg:flex-row gap-12 items-center justify-center mx-auto">
-            <div className="space-y-8 flex flex-col items-center justify-center">
+            <div className="space-y-8 flex flex-col justify-center">
               
               {/* 3D Visualizer */}
               <div className="flex items-center w-3xl max-w-3xl justify-center mb-12">
