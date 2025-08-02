@@ -392,12 +392,8 @@ export default function AudioChatPage() {
                       )}
                       {currentResponseText && (
                         <div className="flex items-center gap-3 justify-center">
-                          <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
-                            isDarkMode 
-                              ? 'bg-green-900 border-green-600 shadow-green-700/10' 
-                              : 'bg-green-50 border-green-600 shadow-green-700/10'
-                          }`}>
-                            <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-4" />
+                          <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs`}>
+                            <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-8" />
                           </div>
                           <div className="flex-1">
                             {/* <p className={`leading-relaxed ${
@@ -658,7 +654,7 @@ export default function AudioChatPage() {
                         </div>
                       )}
                       <div
-                        className={`max-w-[calc(min(90%,32rem] flex lg:max-w-md px-4 py-2 rounded-2xl ${
+                        className={`max-w-[90%] flex lg:max-w-md px-4 py-2 rounded-2xl ${
                           message.type === 'user'
                             ? isDarkMode
                               ? 'bg-blue-900 text-gray-200 justify-end'
@@ -716,12 +712,8 @@ export default function AudioChatPage() {
                   {/* Typing indicator */}
                   {(isTyping || isWaitingForResponse) && (
                     <div className="flex gap-3 justify-start">
-                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
-                        isDarkMode 
-                          ? 'bg-green-900 border-gray-600 shadow-green-700/10' 
-                          : 'bg-green-100 border-gray-300 shadow-green-700/10'
-                      }`}>
-                        <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-4" />
+                      <div className={`w-8 h-8 border rounded-full flex items-center justify-center flex-shrink-0 shadow-xs`}>
+                        <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-8" />
                       </div>
                       <div className={`px-4 py-2 rounded-2xl max-w-xs ${
                         isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
