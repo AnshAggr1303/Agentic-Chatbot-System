@@ -1,19 +1,4 @@
-import { Poppins, Headland_One } from "next/font/google";
 import "./globals.css";
-
-const poppins = Poppins({
-  variable: "--font-poppins",
-  weight: ["300", "500", "700"],
-  display: 'swap',
-  subsets: ["latin"],
-});
-
-const headlandOne = Headland_One({
-  variable: "--font-playfair",
-  weight: ["400"],
-  display: 'swap',
-  subsets: ["latin"],
-});
 
 export const metadata = {
   title: "Create Next App",
@@ -24,7 +9,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${headlandOne.variable} antialiased`}
+        className={`antialiased`}
       >
         {children}
       </body>

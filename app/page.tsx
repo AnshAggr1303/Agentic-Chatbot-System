@@ -311,7 +311,7 @@ export default function AudioChatPage() {
   }
 
   return (
-    <div className={`min-h-screen max-h-screen transition-colors duration-300 ${
+    <div className={`h-screen transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-gray-900 text-gray-100' 
         : 'bg-[#f4f4f9] text-gray-900'
@@ -330,14 +330,14 @@ export default function AudioChatPage() {
         onError={(e) => console.error('Audio element error:', e)}
       />
 
-      <div className="min-h-screen mx-auto px-6">
+      <div className="h-screen mx-auto px-6">
         {/* Header */}
-        <div className="text-center py-8">
+        <div className="text-center max-h-[9rem] py-8">
           <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className={`text-4xl font-medium tracking-tight ${
+            <h1 className={`${
               isDarkMode ? 'text-gray-100' : 'text-gray-900'
             }`}>
-              Study Buddy
+              St<span>u</span>dy B<span>u</span>ddy
             </h1>
             
           </div>
@@ -376,11 +376,11 @@ export default function AudioChatPage() {
                     <div className="space-y-4">
                       {transcript && (
                         <div className="flex items-start gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          {/* <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             isDarkMode ? 'bg-blue-900' : 'bg-blue-50'
                           }`}>
                             <User className="h-4 w-4 text-blue-600" />
-                          </div>
+                          </div> */}
                           <div className="flex-1">
                             <p className={`leading-relaxed ${
                               isDarkMode ? 'text-gray-300' : 'text-gray-600'
@@ -397,16 +397,16 @@ export default function AudioChatPage() {
                               ? 'bg-green-900 border-green-600 shadow-green-700/10' 
                               : 'bg-green-50 border-green-600 shadow-green-700/10'
                           }`}>
-                            <Bot className="h-4 w-4 text-green-600" />
+                            <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-4" />
                           </div>
                           <div className="flex-1">
-                            <p className={`leading-relaxed ${
+                            {/* <p className={`leading-relaxed ${
                               isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                            }`}>
+                            }`}> */}
                               <ReactMarkdown>
                                 {currentResponseText.replace(/^Say [^:]*:\s*"?|"?$/g, '')}
                               </ReactMarkdown>
-                            </p>
+                            {/* </p> */}
                           </div>
                         </div>
                       )}
@@ -420,7 +420,7 @@ export default function AudioChatPage() {
                       }`}>
                         <AudioLines className={isDarkMode ? 'text-gray-200' : 'text-gray-800'} />
                       </div> 
-                      <p className={`font-playfair ${
+                      <p className={`${
                         isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}>
                         {isMonitoring 
@@ -541,7 +541,7 @@ export default function AudioChatPage() {
                 
                 {/* Instructions */}
                 <div className="mt-4 text-center">
-                  <p className={`text-sm font-playfair ${
+                  <p className={`text-sm ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
                     {isMonitoring 
@@ -559,16 +559,17 @@ export default function AudioChatPage() {
         {!isAudioMode && (
           <div className="h-[calc(100vh-9rem)] w-full mx-auto flex flex-col">
             {/* Messages Area */}
-            <div className={`overflow-y-auto w-full flex flex-col py-6 md:px-16 lg:px-24 xl:px-32 space-y-4 ${
+            <div className={`overflow-y-auto w-full ${messages.length == 0? "": "sm:px-16"} max-w-5xl flex flex-col py-6 mx-auto space-y-4 ${
               messages.length === 0 ? '' : 'grow'
             }`}>
               {messages.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center min-h-[50vh]">
                   <div className="text-center w-full max-w-2xl">
-                    <h1 className={`text-4xl font-bold mb-8 mt-64 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
+                    <h1 className={`text-7xl mb-8 mt-64 flex justify-center ${
+                      isDarkMode ? 'text-white *:text-white' : 'text-gray-900 *:text-gray-900'
                     }`}>
-                      {user != null? `Welcome, ${user.name}` : "Welcome back"}
+                      Welc<span>o</span>me&nbsp;
+                      {user != null? `, ${user.name}` : "back"}
                     </h1>
                     
                     {/* Centered Input Area for empty state */}
@@ -652,12 +653,8 @@ export default function AudioChatPage() {
                       }`}
                     >
                       {message.type === 'bot' && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs ${
-                          isDarkMode 
-                            ? 'bg-green-900 shadow-green-700/5' 
-                            : 'bg-green-50 border border-green-200 shadow-green-700/5'
-                        }`}>
-                          <Bot className="h-4 w-4 text-green-600" />
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs`}>
+                          <img src="/logo.png" className="size-8" />
                         </div>
                       )}
                       <div
@@ -665,17 +662,15 @@ export default function AudioChatPage() {
                           message.type === 'user'
                             ? isDarkMode
                               ? 'bg-blue-900 text-gray-200 justify-end'
-                              : 'bg-indigo-100 text-gray-700 justify-end'
+                              : 'bg-[#0041] text-gray-700 justify-end'
                             : isDarkMode
                               ? 'bg-transparent text-gray-300 justify-start'
                               : 'bg-transparent text-gray-700/90 justify-start'
                         }`}
                       >
-                        <p className="text-sm font-normal leading-relaxed">
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
-                        </p>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
-                      {message.type === 'user' && (
+                      {/* {message.type === 'user' && (
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                           isDarkMode 
                             ? 'bg-blue-900' 
@@ -683,7 +678,7 @@ export default function AudioChatPage() {
                         }`}>
                           <User className="h-4 w-4 text-blue-600" />
                         </div>
-                      )}
+                      )} */}
                     </div>
                   ))}
                   
@@ -726,7 +721,7 @@ export default function AudioChatPage() {
                           ? 'bg-green-900 border-gray-600 shadow-green-700/10' 
                           : 'bg-green-100 border-gray-300 shadow-green-700/10'
                       }`}>
-                        <Bot className="h-4 w-4 text-green-600" />
+                        <img src={isDarkMode? "/logo-dark.png": "/logo.png"} className="size-4" />
                       </div>
                       <div className={`px-4 py-2 rounded-2xl max-w-xs ${
                         isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
@@ -753,7 +748,7 @@ export default function AudioChatPage() {
             
             {/* Input Area - Only shown when messages exist */}
             {messages.length > 0 && (
-              <div className="px-4 pb-2 pt-4 min-h-fit w-full max-w-5xl mx-auto">
+              <div className="px-4 pb-4 pt-4 min-h-fit w-full max-w-5xl mx-auto">
                 <div className="flex gap-3 items-center mb-4">
                   <div className="flex-1">
                     <textarea
