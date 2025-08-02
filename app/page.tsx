@@ -431,7 +431,7 @@ export default function AudioChatPage() {
 
               {/* Processing State */}
               {(isLoading || isProcessing) && (
-                <div className={`border rounded-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+                <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
                   isDarkMode 
                     ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                     : 'bg-white border-gray-200 shadow-gray-50/20'
@@ -467,7 +467,7 @@ export default function AudioChatPage() {
               )}
 
               {/* Main Controls */}
-              <div className={`border rounded-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+              <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                   : 'bg-white border-gray-200 shadow-gray-50/20'
