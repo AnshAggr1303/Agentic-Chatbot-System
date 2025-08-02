@@ -349,10 +349,10 @@ export default function AudioChatPage() {
         {/* Audio Mode - Original Implementation */}
         {isAudioMode && (
           <div className="flex flex-col lg:flex-row gap-12 items-center justify-center mx-auto">
-            <div className="space-y-8">
+            <div className="space-y-8 flex items-center justify-center">
               
               {/* 3D Visualizer */}
-              <div className="flex items-center justify-center mb-12">
+              <div className="flex items-center w-3xl max-w-3xl justify-center mb-12">
                 <div className="w-96 h-80 rounded-full overflow-hidden bottom-4">
                   <Spline
                     scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
@@ -366,7 +366,7 @@ export default function AudioChatPage() {
               </div>
 
               {/* Current Transcript */}
-              <div className={`border rounded-3xl py-4 px-6 min-h-[80px] flex items-center shadow-lg transition-colors duration-300 ${
+              <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 min-h-[80px] flex items-center shadow-lg transition-colors duration-300 ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                   : 'bg-white border-gray-200 shadow-gray-50/20'
@@ -654,7 +654,7 @@ export default function AudioChatPage() {
                         </div>
                       )}
                       <div
-                        className={`max-w-[90%] flex lg:max-w-md px-4 py-2 rounded-2xl ${
+                        className={`max-w-[90%] flex px-4 py-2 rounded-2xl ${
                           message.type === 'user'
                             ? isDarkMode
                               ? 'bg-blue-900 text-gray-200 justify-end'
