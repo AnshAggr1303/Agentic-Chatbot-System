@@ -43,13 +43,13 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f4f4f9' }}>
       <div className="bg-white  rounded-3xl shadow-sm shadow-gray-50/50 border border-gray-200 px-8 py-6 w-full max-w-md mx-4">
-        <div className="text-center mb-8">
+        <div className="text-center mb-2">
           <h1 className="text-4xl text-black my-2">
             St<span>u</span>dy B<span>u</span>ddy
           </h1>
         </div>
 
-        <div className="text-center mb-4">
+        <div className="text-center mb-8">
           {/* <h2 className="text-2xl font-semibold text-gray-500 mb-1">
             Sign in and start creating
           </h2> */}
@@ -80,13 +80,13 @@ const LoginPage = () => {
           </div>
         )}
 
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-xs mb-4 text-gray-600">
           By proceeding, you agree to our{' '}
-          <a href="#" className="text-blue-500 hover:underline">
+          <a href="#" className="text-blue-500 font-bold hover:underline">
             Terms of Use
           </a>{' '}
           and acknowledge our{' '}
-          <a href="#" className="text-blue-500 hover:underline">
+          <a href="#" className="text-blue-500 font-bold hover:underline">
             Privacy Policy
           </a>
           .

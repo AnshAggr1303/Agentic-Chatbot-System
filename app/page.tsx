@@ -472,7 +472,7 @@ export default function AudioChatPage() {
                   ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                   : 'bg-white border-gray-200 shadow-gray-50/20'
               }`}>
-                <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center justify-center py-2 gap-4">
                   
                   {/* Mute Toggle */}
                   <div className='flex flex-1/3 items-center justify-center'>
@@ -536,7 +536,7 @@ export default function AudioChatPage() {
                 </div>
                 
                 {/* Instructions */}
-                <div className="mt-4 text-center">
+                {/* <div className="mt-4 text-center">
                   <p className={`text-sm ${
                     isDarkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
@@ -545,7 +545,7 @@ export default function AudioChatPage() {
                       : "Click the microphone to start listening"
                     }
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
