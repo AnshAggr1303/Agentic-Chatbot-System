@@ -1,5 +1,5 @@
 // index.js - Updated for structured learning data
-require('dotenv').config();
+// require('dotenv').config();
 const express = require('express');
 const { spawn } = require('child_process');
 const { createClient } = require('@supabase/supabase-js');
@@ -12,8 +12,8 @@ const app = express();
 const port = 3002;
 
 // Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = "https://qlphizfsggoinjxmxjep.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFscGhpemZzZ2dvaW5qeG14amVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4Njc5MTQsImV4cCI6MjA2NzQ0MzkxNH0.IcXKb6ug3hIuBJBziC47eC6meeZyi2do2yMyFy9Z4bY";
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('Missing required environment variables: SUPABASE_URL and/or SUPABASE_ANON_KEY');

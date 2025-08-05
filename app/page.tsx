@@ -352,7 +352,7 @@ export default function AudioChatPage() {
             <div className="space-y-8 flex flex-col justify-center">
               
               {/* 3D Visualizer */}
-              <div className="flex items-center w-3xl max-w-3xl justify-center mb-12">
+              <div className="flex items-center w-xl max-w-xl justify-center mb-12">
                 <div className="w-96 h-80 rounded-full overflow-hidden bottom-4">
                   <Spline
                     scene="https://prod.spline.design/P4Ddg18XE6gwewn8/scene.splinecode"
@@ -366,7 +366,7 @@ export default function AudioChatPage() {
               </div>
 
               {/* Current Transcript */}
-              <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 min-h-[80px] flex items-center shadow-lg transition-colors duration-300 ${
+              <div className={`border rounded-3xl w-xl max-w-xl py-4 px-6 min-h-[80px] flex items-center shadow-lg transition-colors duration-300 ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                   : 'bg-white border-gray-200 shadow-gray-50/20'
@@ -431,7 +431,7 @@ export default function AudioChatPage() {
 
               {/* Processing State */}
               {(isLoading || isProcessing) && (
-                <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+                <div className={`border rounded-3xl w-xl max-w-xl py-4 px-6 shadow-lg transition-colors duration-300 ${
                   isDarkMode 
                     ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                     : 'bg-white border-gray-200 shadow-gray-50/20'
@@ -467,7 +467,7 @@ export default function AudioChatPage() {
               )}
 
               {/* Main Controls */}
-              <div className={`border rounded-3xl w-3xl max-w-3xl py-4 px-6 shadow-lg transition-colors duration-300 ${
+              <div className={`border rounded-3xl w-xl max-w-xl py-4 px-6 shadow-lg transition-colors duration-300 ${
                 isDarkMode 
                   ? 'bg-gray-800 border-gray-700 shadow-gray-900/20' 
                   : 'bg-white border-gray-200 shadow-gray-50/20'
