@@ -44,8 +44,8 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f4f4f9' }}>
       <div className="bg-white  rounded-3xl shadow-sm shadow-gray-50/50 border border-gray-200 px-8 py-6 w-full max-w-md mx-4">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-black my-2">
-            Study Buddy
+          <h1 className="text-4xl text-black my-2">
+            St<span>u</span>dy B<span>u</span>ddy
           </h1>
         </div>
 
@@ -62,7 +62,7 @@ const LoginPage = () => {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full bg-gray-100 border border-gray-300 rounded-2xl py-3 px-6 flex items-center justify-center gap-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gray-100 border border-gray-300 rounded-2xl py-3 px-6 flex items-center justify-center gap-3 text-gray-700 font-bold! hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
