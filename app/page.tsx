@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, Ref } from 'react';
-import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut, X, AudioLines, Moon, Sun, AlertCircle } from 'lucide-react';
+import { Mic, Volume2, VolumeX, MicOff, Send, User, Bot, LogOut, X, AudioLines, Moon, Sun, AlertCircle, MessageCircle } from 'lucide-react';
 import Spline from '@splinetool/react-spline';
 import { useSpeech } from '../hooks/useSpeech';
 import { useAudio } from '../hooks/useAudio';
@@ -530,7 +530,7 @@ export default function AudioChatPage() {
                       }`}
                       title="Switch to text mode"
                     >
-                      <X className="h-5 w-5" />
+                      <MessageCircle className="h-5 w-5" />
                     </button>
                   </div>
                 </div>
