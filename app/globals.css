@@ -20,17 +20,13 @@
   font-family: "FK Grotesk";
   src: url("/FK_Grotesk.woff2") format('woff2');
   font-weight: 300;
-}
-@font-face {
-  font-family: "FK Grotesk";
-  src: url("/FK_Grotesk.woff2") format('woff2');
-  font-weight: 700;
+  font-display: swap;
 }
 
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-fk: "FK Grotesk", sans-serif; 
+  --font-fk: "FK Grotesk", serif; 
   --font-pp: "PP", sans-serif;
   --font-pp-italic: "PP Italic", sans-serif;
 }
